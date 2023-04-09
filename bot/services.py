@@ -49,3 +49,4 @@ async def check_product_in_db(username: str, link: str) -> bool:
         async with session.get(url=url, params=params) as resp:
             data = await resp.json()
     return True if data else False
+#

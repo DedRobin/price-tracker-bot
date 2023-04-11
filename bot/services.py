@@ -22,12 +22,12 @@ async def get_data_from_update(update: Update) -> dict:
     return data
 
 
-async def get_chat_ids() -> dict:
+async def get_chat_ids() -> list:
     async with ClientSession() as session:
         url = f"http://{SERVER_HOST}:8080/api/users/"
         async with session.get(url=url) as resp:
-            data = await resp.json()
-            chat_ids = data["chat_ids"]
+            data: dict = await resp.json()
+            chat_ids = [user["chat_id"] for user in data.values()]
     logger.info("Get chat IDs")
     return chat_ids
 

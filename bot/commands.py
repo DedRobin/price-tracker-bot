@@ -6,7 +6,8 @@ from telegram.ext import ContextTypes, ConversationHandler
 
 from bot.settings import get_logger
 from bot.states import STATES
-from bot.services import get_data_from_update, get_chat_ids, check_link, check_product_in_db, add_product
+from bot.services import get_data_from_update, get_chat_ids, check_link, check_product_in_db, add_product, \
+    get_user_products
 from parsers.services import parse_onliner
 
 # from bot.queries import write_product, checking_product_in_db, get_user_products, get_product, untrack_product, \
@@ -116,9 +117,9 @@ async def show_products(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     chat_ids = await get_chat_ids()
 
     if data["chat_id"] in chat_ids:
-        products = await get_user_products(username=data["username"])
+        products: dict = await get_user_products(username=data["username"])
         keyboard = [
-            [InlineKeyboardButton(text=product.name, callback_data=f"id={product.id}")] for product in products
+            [InlineKeyboardButton(text=p.get("name"), callback_data=f"id={p_id}")] for p_id, p in products.items()
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
         await context.bot.send_message(

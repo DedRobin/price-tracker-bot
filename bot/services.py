@@ -62,3 +62,14 @@ async def add_product(username: str, link: str, name: str, current_price: float)
         }
         async with session.post(url=url, json=data) as resp:
             return resp.status
+
+
+async def get_user_products(username: str):
+    async with ClientSession() as session:
+        url = f"http://{SERVER_HOST}:8080/api/products/"
+        params = {
+            "username": username,
+        }
+        async with session.get(url=url, params=params) as resp:
+            products = await resp.json()
+            return products

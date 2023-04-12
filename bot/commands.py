@@ -7,7 +7,7 @@ from telegram.ext import ContextTypes, ConversationHandler
 from bot.settings import get_logger
 from bot.states import STATES
 from bot.services import get_data_from_update, get_chat_ids, check_link, check_product_in_db, add_product, \
-    get_user_products
+    get_user_products, get_product
 from parsers.services import parse_onliner
 
 # from bot.queries import write_product, checking_product_in_db, get_user_products, get_product, untrack_product, \
@@ -59,7 +59,7 @@ async def track_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
 async def skip_track(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     data = await get_data_from_update(update)
     command = inspect.currentframe().f_code.co_name
-    logger.debug(
+    logger.info(
         "{0} {1} - {2} ({3}), chat ID={4} used command '/{5}'".format(*data.values(), command))
 
     await update.message.reply_text(
@@ -71,7 +71,7 @@ async def skip_track(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
 async def track_product(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     data = await get_data_from_update(update)
     command = inspect.currentframe().f_code.co_name
-    logger.debug(
+    logger.info(
         "{0} {1} - {2} ({3}), chat ID={4} used command '/{5}'".format(*data.values(), command))
 
     chat_ids = await get_chat_ids()
@@ -111,7 +111,7 @@ async def track_product(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
 async def show_products(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     data = await get_data_from_update(update)
     command = inspect.currentframe().f_code.co_name
-    logger.debug(
+    logger.info(
         "{0} {1} - {2} ({3}), chat ID={4} used command '/{5}'".format(*data.values(), command))
 
     chat_ids = await get_chat_ids()
@@ -133,7 +133,7 @@ async def show_products(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
 async def get_product_actions(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     data = await get_data_from_update(update)
     command = inspect.currentframe().f_code.co_name
-    logger.debug(
+    logger.info(
         "{0} {1} - {2} ({3}), chat ID={4} used command '/{5}'".format(*data.values(), command))
 
     query = update.callback_query
@@ -142,13 +142,13 @@ async def get_product_actions(update: Update, context: ContextTypes.DEFAULT_TYPE
 
     keyboard = [
         [
-            InlineKeyboardButton(text="Удалить", callback_data=f"{product.id}.{STATES['REMOVE']}"),
+            InlineKeyboardButton(text="Удалить", callback_data=f"{product.get('id')}.{STATES['REMOVE']}"),
 
         ],
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     await query.answer()
-    await query.edit_message_text(text=f"Выбран товар:\n{product.name}\n/cancel - отмена действия")
+    await query.edit_message_text(text=f"Выбран товар:\n{product.get('name')}\n/cancel - отмена действия")
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
         reply_markup=reply_markup,

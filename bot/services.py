@@ -64,7 +64,7 @@ async def add_product(username: str, link: str, name: str, current_price: float)
             return resp.status
 
 
-async def get_user_products(username: str):
+async def get_user_products(username: str) -> dict[dict]:
     async with ClientSession() as session:
         url = f"http://{SERVER_HOST}:8080/api/products/"
         params = {
@@ -73,3 +73,11 @@ async def get_user_products(username: str):
         async with session.get(url=url, params=params) as resp:
             products = await resp.json()
             return products
+
+
+async def get_product(product_id: int) -> dict:
+    async with ClientSession() as session:
+        url = f"http://{SERVER_HOST}:8080/api/products/{product_id}/"
+        async with session.get(url=url) as resp:
+            product = await resp.json()
+            return product

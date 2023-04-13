@@ -26,8 +26,8 @@ async def get_chat_ids() -> list:
     async with ClientSession() as session:
         url = f"http://{SERVER_HOST}:8080/api/users/"
         async with session.get(url=url) as resp:
-            data: dict = await resp.json()
-            chat_ids = [user["chat_id"] for user in data.values()]
+            users = await resp.json()
+            chat_ids = [user["chat_id"] for user in users]
     logger.info("Get chat IDs")
     return chat_ids
 
@@ -64,7 +64,7 @@ async def add_product(username: str, link: str, name: str, current_price: float)
             return resp.status
 
 
-async def get_user_products(username: str) -> dict[dict]:
+async def get_user_products(username: str) -> list[dict]:
     async with ClientSession() as session:
         url = f"http://{SERVER_HOST}:8080/api/products/"
         params = {
@@ -75,9 +75,12 @@ async def get_user_products(username: str) -> dict[dict]:
             return products
 
 
-async def get_product(product_id: int) -> dict:
+async def untrack_product(username: str, product_id: int):
     async with ClientSession() as session:
         url = f"http://{SERVER_HOST}:8080/api/products/{product_id}/"
-        async with session.get(url=url) as resp:
-            product = await resp.json()
-            return product
+        data = {
+            "action": "remove_user",
+            "username": username,
+        }
+        async with session.put(url=url, json=data) as resp:
+            return resp.status

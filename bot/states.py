@@ -1,6 +1,6 @@
 STATES = {
     "TRACK": 0,
     "BACK": 1,
-    "SHOW": 2,
+    "PRODUCT_LIST": 2,
     "REMOVE": 3,
 }

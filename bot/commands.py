@@ -7,7 +7,7 @@ from telegram.ext import ContextTypes, ConversationHandler
 from bot.settings import get_logger
 from bot.states import STATES
 from bot.services import get_data_from_update, get_chat_ids, check_link, check_product_in_db, add_product, \
-    get_user_products, get_product
+    get_user_products, untrack_product
 from parsers.services import parse_onliner
 
 # from bot.queries import write_product, checking_product_in_db, get_user_products, get_product, untrack_product, \
@@ -117,9 +117,15 @@ async def show_products(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     chat_ids = await get_chat_ids()
 
     if data["chat_id"] in chat_ids:
-        products: dict = await get_user_products(username=data["username"])
+        products = await get_user_products(username=data["username"])
+        context.user_data["products"] = {index: product for index, product in enumerate(products)}
         keyboard = [
-            [InlineKeyboardButton(text=p.get("name"), callback_data=f"id={p_id}")] for p_id, p in products.items()
+            [
+                InlineKeyboardButton(
+                    text=product.get("name"),
+                    callback_data=index)
+            ]
+            for index, product in context.user_data["products"].items()
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
         await context.bot.send_message(
@@ -127,7 +133,7 @@ async def show_products(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
             reply_markup=reply_markup,
             text="Список отслеживаемых товаров"
         )
-    return STATES["SHOW"]
+    return STATES["PRODUCT_LIST"]
 
 
 async def get_product_actions(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
@@ -137,24 +143,25 @@ async def get_product_actions(update: Update, context: ContextTypes.DEFAULT_TYPE
         "{0} {1} - {2} ({3}), chat ID={4} used command '/{5}'".format(*data.values(), command))
 
     query = update.callback_query
-    product_id = int(query.data[3:])
-    product = await get_product(product_id=product_id)
+    index = int(query.data)
+    product = context.user_data["products"][index]
+    product_id = product["id"]
 
     keyboard = [
         [
-            InlineKeyboardButton(text="Удалить", callback_data=f"{product.get('id')}.{STATES['REMOVE']}"),
+            InlineKeyboardButton(text="Удалить", callback_data=f"{product_id}.{STATES['REMOVE']}"),
 
         ],
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     await query.answer()
-    await query.edit_message_text(text=f"Выбран товар:\n{product.get('name')}\n/cancel - отмена действия")
+    await query.edit_message_text(text=f"Выбран товар:\n{product['name']}\n/cancel - отмена действия")
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
         reply_markup=reply_markup,
         text="Действия:",
     )
-    return STATES["SHOW"]
+    return STATES["PRODUCT_LIST"]
 
 
 async def remove_product(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
@@ -166,12 +173,19 @@ async def remove_product(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     query = update.callback_query
     await query.answer()
 
-    product_id, _ = query.data.split(".")
-    await untrack_product(username=data["username"], product_id=int(product_id))
-    await context.bot.send_message(
-        chat_id=data["chat_id"],
-        text="Товар удален",
-    )
+    product_id = query.data.split(".")[0]
+    status = await untrack_product(username=data["username"], product_id=int(product_id))
+    if status == 200:
+        await context.bot.send_message(
+            chat_id=data["chat_id"],
+            text="Товар удален",
+        )
+    else:
+        await context.bot.send_message(
+            chat_id=data["chat_id"],
+            text=f"Что-то пошло не так (Ошибка {status})",
+        )
+
     return ConversationHandler.END
 
 

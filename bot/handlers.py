@@ -27,8 +27,8 @@ track_product_handler = ConversationHandler(
 edit_product_handler = ConversationHandler(
     entry_points=[MessageHandler(filters.Regex(r"^Показать отслеживаемые товары$"), show_products)],
     states={
-        STATES["SHOW"]: [
-            CallbackQueryHandler(get_product_actions, pattern=r"^id=\d+$"),
+        STATES["PRODUCT_LIST"]: [
+            CallbackQueryHandler(get_product_actions, pattern=r"^\d+$"),
             CallbackQueryHandler(remove_product, pattern=rf"^\d+\.{STATES['REMOVE']}$"),
         ]
     },

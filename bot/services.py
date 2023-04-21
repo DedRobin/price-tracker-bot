@@ -51,14 +51,12 @@ async def check_product_in_db(username: str, link: str) -> bool:
     return True if data else False
 
 
-async def add_product(username: str, link: str, name: str, current_price: float) -> int:
+async def add_product(username: str, link: str) -> int:
     async with ClientSession() as session:
         url = f"http://{SERVER_HOST}:8080/api/products/"
         data = {
             "username": username,
             "link": link,
-            "name": name,
-            "current_price": current_price,
         }
         async with session.post(url=url, json=data) as resp:
             return resp.status

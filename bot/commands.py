@@ -1,6 +1,4 @@
 import inspect
-import os
-
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardMarkup
 from telegram.ext import ContextTypes, ConversationHandler
 
@@ -8,11 +6,6 @@ from bot.settings import get_logger
 from bot.states import STATES
 from bot.services import get_data_from_update, get_chat_ids, check_link, check_product_in_db, add_product, \
     get_user_products, untrack_product
-from parsers.services import parse_onliner
-
-# from bot.queries import write_product, checking_product_in_db, get_user_products, get_product, untrack_product, \
-#     checking_correctness_link, get_chat_ids
-
 
 logger = get_logger(__name__)
 
@@ -93,11 +86,11 @@ async def track_product(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
         if product_is_existed:
             text = "Такая ссылка уже отслеживается"
         else:
-            name, price = await parse_onliner(url=link)
+            # name, price = await parse_onliner(url=link)
 
-            status = await add_product(username=data["username"], link=link, name=name, current_price=price)
+            status = await add_product(username=data["username"], link=link)
             if status == 201:
-                text = f"Товар '{name}' был добавлен для отслеживается"
+                text = "Товар был добавлен для отслеживается"
             else:
                 text = f"Не удалось добавить товар (Ошибка {status})"
 

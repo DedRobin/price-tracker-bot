@@ -1,7 +1,8 @@
 import os
 import re
-from telegram import Update
+
 from aiohttp import ClientSession
+from telegram import Update
 
 from bot.settings import get_logger
 
@@ -16,7 +17,7 @@ async def get_data_from_update(update: Update) -> dict:
         "last_name": update.effective_chat.last_name,
         "username": update.effective_chat.username,
         "link": update.effective_chat.link,
-        "chat_id": update.effective_chat.id
+        "chat_id": update.effective_chat.id,
     }
 
     return data
@@ -42,10 +43,7 @@ async def check_link(link: str) -> bool:
 async def check_product_in_db(username: str, link: str) -> bool:
     async with ClientSession() as session:
         url = f"http://{SERVER_HOST}:8080/api/products/"
-        params = {
-            "username": username,
-            "link": link
-        }
+        params = {"username": username, "link": link}
         async with session.get(url=url, params=params) as resp:
             data = await resp.json()
     return True if data else False

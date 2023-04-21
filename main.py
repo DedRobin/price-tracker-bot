@@ -1,9 +1,11 @@
 import os
-from telegram.ext import ApplicationBuilder
-from bot.settings import get_logger
-from bot.handlers import start_handler, track_product_handler, edit_product_handler
 
-if __name__ == '__main__':
+from telegram.ext import ApplicationBuilder
+
+from bot.handlers import edit_product_handler, start_handler, track_product_handler
+from bot.settings import get_logger
+
+if __name__ == "__main__":
     logger = get_logger()
 
     application = ApplicationBuilder().token(os.environ.get("BOT_TOKEN")).build()

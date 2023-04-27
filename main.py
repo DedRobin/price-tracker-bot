@@ -16,7 +16,13 @@ def main():
     application.add_handler(edit_product_handler)
     application.add_handler(add_user_handler)
 
-    application.run_polling()
+    # application.run_polling()
+    application.run_webhook(
+        listen="0.0.0.0",
+        port=5000,
+        secret_token=os.environ.get("BOT_TOKEN"),
+        webhook_url=os.environ.get("WEBHOOK_URL")
+    )
 
 
 if __name__ == "__main__":

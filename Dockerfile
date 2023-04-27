@@ -11,5 +11,3 @@ RUN pip install --trusted-host pypi.org --no-cache-dir --upgrade pip && \
     pip install --trusted-host pypi.org --no-cache-dir -r requirements.txt
 
 WORKDIR /app
-
-CMD python main.py

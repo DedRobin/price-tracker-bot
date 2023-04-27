@@ -1,4 +1,5 @@
 import inspect
+import os
 
 from telegram import (
     InlineKeyboardButton,
@@ -11,6 +12,7 @@ from telegram.ext import ContextTypes, ConversationHandler
 from bot.services import (
     add_product,
     check_link,
+    post_user,
     check_product_in_db,
     get_chat_ids,
     get_data_from_update,
@@ -47,6 +49,41 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             reply_markup=reply_markup,
             text="Выберите действие.",
         )
+
+
+async def add_user(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    data = await get_data_from_update(update)
+    command = inspect.currentframe().f_code.co_name
+    logger.info(
+        "{0} {1} - {2} ({3}), chat ID={4} used command '/{5}'".format(
+            *data.values(), command
+        )
+    )
+    await context.bot.send_message(
+        chat_id=data["chat_id"],
+        text="Введите секретный ключ\n/cancel - отмена",
+    )
+    return STATES["ADD_USER"]
+
+
+async def check_admin_key(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    data = await get_data_from_update(update)
+    command = inspect.currentframe().f_code.co_name
+    logger.info(
+        "{0} {1} - {2} ({3}), chat ID={4} used command '/{5}'".format(
+            *data.values(), command
+        )
+    )
+
+    admin_key = update.message.text
+    status = await post_user(admin_key=admin_key, username=data["username"], chat_id=data["chat_id"])
+    if status == 201:
+        text = "Пользователь добавлен"
+    else:
+        text = f"Не удалось добавить пользователя (Ошибка {status})"
+
+    await context.bot.send_message(chat_id=data["chat_id"], text=text)
+    return ConversationHandler.END
 
 
 async def track_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
@@ -150,7 +187,7 @@ async def show_products(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
 
 
 async def get_product_actions(
-    update: Update, context: ContextTypes.DEFAULT_TYPE
+        update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> int:
     data = await get_data_from_update(update)
     command = inspect.currentframe().f_code.co_name

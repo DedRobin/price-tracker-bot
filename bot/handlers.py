@@ -15,8 +15,11 @@ from bot.commands import (
     show_products,
     skip_track,
     start,
+    add_user,
+    check_admin_key,
     track_menu,
     track_product,
+    cancel
 )
 from bot.states import STATES
 
@@ -26,6 +29,20 @@ filterwarnings(
 
 # HANDLERS
 start_handler = CommandHandler("start", start)
+add_user_handler = ConversationHandler(
+    entry_points=[
+        CommandHandler("add_user", add_user),
+    ],
+    states={
+        STATES["ADD_USER"]: [
+            CommandHandler("cancel", cancel),
+            MessageHandler(filters.TEXT, check_admin_key),
+        ]
+    },
+    fallbacks=[
+        CommandHandler("cancel", start)
+    ],
+)
 
 track_product_handler = ConversationHandler(
     entry_points=[

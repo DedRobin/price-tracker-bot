@@ -23,6 +23,18 @@ async def get_data_from_update(update: Update) -> dict:
     return data
 
 
+async def post_user(admin_key: str, username: str, chat_id: str) -> int:
+    async with ClientSession() as session:
+        url = f"http://{SERVER_HOST}:8080/api/users/post/"
+        data = {
+            "admin_key": admin_key,
+            "username": username,
+            "chat_id": chat_id,
+        }
+        async with session.post(url=url, json=data) as resp:
+            return resp.status
+
+
 async def get_chat_ids() -> list:
     async with ClientSession() as session:
         url = f"http://{SERVER_HOST}:8080/api/users/"

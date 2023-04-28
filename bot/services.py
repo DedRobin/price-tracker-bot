@@ -37,7 +37,7 @@ async def post_user(admin_key: str, username: str, chat_id: str) -> int:
 
 async def get_chat_ids() -> list:
     async with ClientSession() as session:
-        url = f"http://{SERVER_HOST}:8080/api/users/"
+        url = f"{SERVER_HOST}/api/users/"
         async with session.get(url=url) as resp:
             users = await resp.json()
             chat_ids = [user["chat_id"] for user in users]

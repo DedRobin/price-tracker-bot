@@ -8,6 +8,8 @@ from bot.settings import get_logger
 
 SERVER_HOST = os.environ.get("SERVER_HOST", "localhost")
 PORT = int(os.environ.get("PORT", 8080))
+TEST_VAR = "http://proxy.server:3128"
+
 logger = get_logger(__name__)
 
 
@@ -25,7 +27,7 @@ async def get_data_from_update(update: Update) -> dict:
 
 async def post_user(admin_key: str, username: str, chat_id: str) -> int:
     async with ClientSession(trust_env=True,
-                             headers={"Referer": "https://price-tracker-kmbb.onrender.com/"}) as session:
+                             headers={"Referer": TEST_VAR}) as session:
         url = f"{SERVER_HOST}/api/users/post/"
         print(url)
         data = {

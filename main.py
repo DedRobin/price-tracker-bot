@@ -20,7 +20,7 @@ def main():
     application.run_webhook(
         listen="0.0.0.0",
         port=5000,
-        secret_token=os.environ.get("BOT_TOKEN"),
+        secret_token=os.environ.get("SECRET_TOKEN"),
         webhook_url=os.environ.get("WEBHOOK_URL")
     )
 

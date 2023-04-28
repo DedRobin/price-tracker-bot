@@ -7,7 +7,7 @@ from telegram import Update
 from bot.settings import get_logger
 
 SERVER_HOST = os.environ.get("SERVER_HOST", "localhost")
-
+PORT = os.environ.get("PORT", "localhost")
 logger = get_logger(__name__)
 
 
@@ -25,7 +25,7 @@ async def get_data_from_update(update: Update) -> dict:
 
 async def post_user(admin_key: str, username: str, chat_id: str) -> int:
     async with ClientSession() as session:
-        url = f"http://{SERVER_HOST}:8080/api/users/post/"
+        url = f"http://{SERVER_HOST}:{PORT}/api/users/post/"
         data = {
             "admin_key": admin_key,
             "username": username,

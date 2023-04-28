@@ -7,7 +7,7 @@ from telegram import Update
 from bot.settings import get_logger
 
 SERVER_HOST = os.environ.get("SERVER_HOST", "localhost")
-PORT = os.environ.get("PORT", "localhost")
+PORT = int(os.environ.get("PORT", 8080))
 logger = get_logger(__name__)
 
 

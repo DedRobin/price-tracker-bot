@@ -24,7 +24,8 @@ async def get_data_from_update(update: Update) -> dict:
 
 
 async def post_user(admin_key: str, username: str, chat_id: str) -> int:
-    async with ClientSession(trust_env=True) as session:
+    async with ClientSession(trust_env=True,
+                             headers={"Referer": "https://price-tracker-kmbb.onrender.com/"}) as session:
         url = f"{SERVER_HOST}/api/users/post/"
         print(url)
         data = {

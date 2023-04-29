@@ -6,7 +6,7 @@ from telegram import Update
 
 from bot.settings import get_logger
 
-SERVER_HOST = os.environ.get("SERVER_HOST", "localhost")
+SERVER_HOST = os.environ.get("SERVER_HOST", "http://127.0.0.1:8000")
 
 logger = get_logger(__name__)
 
@@ -25,7 +25,7 @@ async def get_data_from_update(update: Update) -> dict:
 
 async def post_user(admin_key: str, username: str, chat_id: str) -> int:
     async with ClientSession() as session:
-        url = f"http://{SERVER_HOST}:8080/api/users/post/"
+        url = f"{SERVER_HOST}/api/users/post/"
         data = {
             "admin_key": admin_key,
             "username": username,
@@ -37,7 +37,7 @@ async def post_user(admin_key: str, username: str, chat_id: str) -> int:
 
 async def get_chat_ids() -> list:
     async with ClientSession() as session:
-        url = f"http://{SERVER_HOST}:8080/api/users/"
+        url = f"{SERVER_HOST}/api/users/"
         async with session.get(url=url) as resp:
             users = await resp.json()
             chat_ids = [user["chat_id"] for user in users]
@@ -54,7 +54,7 @@ async def check_link(link: str) -> bool:
 
 async def check_product_in_db(username: str, link: str) -> bool:
     async with ClientSession() as session:
-        url = f"http://{SERVER_HOST}:8080/api/products/"
+        url = f"{SERVER_HOST}/api/products/"
         params = {"username": username, "link": link}
         async with session.get(url=url, params=params) as resp:
             data = await resp.json()

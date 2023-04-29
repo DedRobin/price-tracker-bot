@@ -63,7 +63,7 @@ async def check_product_in_db(username: str, link: str) -> bool:
 
 async def add_product(username: str, link: str) -> int:
     async with ClientSession() as session:
-        url = f"http://{SERVER_HOST}:8080/api/products/"
+        url = f"{SERVER_HOST}/api/products/"
         data = {
             "username": username,
             "link": link,
@@ -74,7 +74,7 @@ async def add_product(username: str, link: str) -> int:
 
 async def get_user_products(username: str) -> list[dict]:
     async with ClientSession() as session:
-        url = f"http://{SERVER_HOST}:8080/api/products/"
+        url = f"{SERVER_HOST}/api/products/"
         params = {
             "username": username,
         }
@@ -85,7 +85,7 @@ async def get_user_products(username: str) -> list[dict]:
 
 async def untrack_product(username: str, product_id: int):
     async with ClientSession() as session:
-        url = f"http://{SERVER_HOST}:8080/api/products/{product_id}/"
+        url = f"{SERVER_HOST}/api/products/{product_id}/"
         data = {
             "action": "remove_user",
             "username": username,

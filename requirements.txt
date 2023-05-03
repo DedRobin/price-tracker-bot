@@ -1,6 +1,7 @@
 python-telegram-bot==20.2
-aiohttp==3.8.4
 bs4==0.0.1
+uvicorn==0.22.0
+fastapi==0.95.1
 
 flake8>=6.0.0
 isort>=5.12.0

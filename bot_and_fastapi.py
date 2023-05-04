@@ -113,7 +113,7 @@ async def main() -> None:
     url = os.environ.get("URL")
     admin_chat_id = os.environ.get("ADMIN_CHAT_ID")
     host = os.environ.get("HOST", "127.0.0.1")
-    port = 8000
+    port = os.environ.get("PORT", 5000)
 
     context_types = ContextTypes(context=CustomContext)
     # Here we set updater to None because we want our custom webhook server to handle the updates

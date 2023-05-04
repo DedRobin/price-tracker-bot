@@ -4,11 +4,11 @@ import re
 from aiohttp import ClientSession
 from telegram import Update
 
-from bot.settings import get_logger
+from bot.settings import enable_logger
 
 SERVER_HOST = os.environ.get("SERVER_HOST", "localhost")
 
-logger = get_logger(__name__)
+logger = enable_logger(__name__)
 
 
 async def get_data_from_update(update: Update) -> dict:

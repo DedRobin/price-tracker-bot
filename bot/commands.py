@@ -19,10 +19,10 @@ from bot.services import (
     get_user_products,
     untrack_product,
 )
-from bot.settings import get_logger
+from bot.settings import enable_logger
 from bot.states import STATES
 
-logger = get_logger(__name__)
+logger = enable_logger(__name__)
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:

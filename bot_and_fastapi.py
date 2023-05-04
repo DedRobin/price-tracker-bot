@@ -19,13 +19,7 @@ import os
 from dataclasses import dataclass
 from fastapi import FastAPI
 
-from http import HTTPStatus
-
 import uvicorn
-from starlette.applications import Starlette
-from starlette.requests import Request
-from starlette.responses import PlainTextResponse, Response
-from starlette.routing import Route
 
 from telegram import __version__ as TG_VER
 
@@ -114,8 +108,8 @@ async def webhook_update(update: WebhookUpdate, context: CustomContext) -> None:
 async def main() -> None:
     """Set up the application and a custom webserver."""
 
-    token = os.environ.get("TOKEN")
-    url = "https://0ad0-86-57-227-172.ngrok-free.app"
+    token = os.environ.get("BOT_TOKEN")
+    url = os.environ.get("URL")
     admin_chat_id = os.environ.get("ADMIN_CHAT_ID")
     port = 8000
 
@@ -134,6 +128,7 @@ async def main() -> None:
     application.add_handler(TypeHandler(type=WebhookUpdate, callback=webhook_update))
 
     # Pass webhook settings to telegram
+    # await application.bot.set_webhook(url=f"{url}/telegram")
     await application.bot.set_webhook(url=f"{url}/telegram")
 
     # Set up webserver
@@ -142,7 +137,7 @@ async def main() -> None:
 
     @app.get("/")
     async def root():
-        return {"message": "Hello World"}
+        return {"message": "Bot is running"}
 
     webserver = uvicorn.Server(
         config=uvicorn.Config(

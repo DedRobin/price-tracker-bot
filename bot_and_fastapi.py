@@ -18,8 +18,10 @@ import logging
 import os
 from dataclasses import dataclass
 from fastapi import FastAPI
-
+from fastapi.requests import Request
+from fastapi.responses import Response
 import uvicorn
+from pydantic import BaseModel
 
 from telegram import __version__ as TG_VER
 
@@ -79,7 +81,6 @@ class CustomContext(CallbackContext[ExtBot, dict, dict, dict]):
 
 
 async def start(update: Update, context: CustomContext) -> None:
-    print(update.effective_user.id)
     """Display a message with instructions on how to use this bot."""
     url = context.bot_data["url"]
     payload_url = html.escape(f"{url}/submitpayload?user_id=<your user id>&payload=<payload>")
@@ -135,9 +136,22 @@ async def main() -> None:
 
     app = FastAPI()
 
+    class BotRequest(BaseModel):
+        update_id: int
+        message: dict
+
     @app.get("/")
     async def root():
         return {"message": "Bot is running"}
+
+    @app.post("/telegram")
+    async def telegram(request: BotRequest):
+        data = request.dict()
+        await application.update_queue.put(
+            Update.de_json(data=data, bot=application.bot)
+        )
+        return Response()
+        # return
 
     webserver = uvicorn.Server(
         config=uvicorn.Config(

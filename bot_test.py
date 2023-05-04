@@ -73,9 +73,9 @@ class CustomContext(CallbackContext[ExtBot, dict, dict, dict]):
 
     @classmethod
     def from_update(
-        cls,
-        update: object,
-        application: "Application",
+            cls,
+            update: object,
+            application: "Application",
     ) -> "CustomContext":
         if isinstance(update, WebhookUpdate):
             return cls(application=application, user_id=update.user_id)
@@ -113,7 +113,7 @@ async def main() -> None:
     """Set up the application and a custom webserver."""
 
     token = os.environ.get("TOKEN")
-    url = "https://0ad0-86-57-227-172.ngrok-free.app"
+    url = os.environ.get("URL")
     admin_chat_id = os.environ.get("ADMIN_CHAT_ID")
     port = 8000
 
@@ -137,8 +137,9 @@ async def main() -> None:
     # Set up webserver
     async def telegram(request: Request) -> Response:
         """Handle incoming Telegram updates by putting them into the `update_queue`"""
+        data = await request.json()
         await application.update_queue.put(
-            Update.de_json(data=await request.json(), bot=application.bot)
+            Update.de_json(data=data, bot=application.bot)
         )
         return Response()
 

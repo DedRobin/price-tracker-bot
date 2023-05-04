@@ -112,6 +112,7 @@ async def main() -> None:
     token = os.environ.get("BOT_TOKEN")
     url = os.environ.get("URL")
     admin_chat_id = os.environ.get("ADMIN_CHAT_ID")
+    host = os.environ.get("HOST", "127.0.0.1")
     port = 8000
 
     context_types = ContextTypes(context=CustomContext)
@@ -158,7 +159,7 @@ async def main() -> None:
             app=app,
             port=port,
             use_colors=False,
-            host="127.0.0.1",
+            host=host,
         )
     )
 

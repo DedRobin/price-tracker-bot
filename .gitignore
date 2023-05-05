@@ -2,3 +2,4 @@ venv
 .env
 .idea
 bot/__pycache__/
+database.db

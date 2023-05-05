@@ -5,7 +5,7 @@ from aiohttp import ClientSession
 from telegram import Update
 from telegram.ext import ContextTypes
 
-from bot.queries import insert_user
+from bot.queries import insert_user, select_users
 from bot.settings import enable_logger
 
 SERVER_HOST = os.environ.get("SERVER_HOST", "localhost")
@@ -33,12 +33,11 @@ async def post_user(admin_key: str, username: str, chat_id: int) -> int:
 
 
 async def get_chat_ids() -> list:
-    async with ClientSession() as session:
-        url = f"http://{SERVER_HOST}:8080/api/users/"
-        async with session.get(url=url) as resp:
-            users = await resp.json()
-            chat_ids = [user["chat_id"] for user in users]
+    """Get all chat IDs"""
+
+    users = await select_users()
     logger.info("Get chat IDs")
+    chat_ids = [user.id for user in users]
     return chat_ids
 
 

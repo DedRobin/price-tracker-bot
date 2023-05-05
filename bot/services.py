@@ -3,7 +3,9 @@ import re
 
 from aiohttp import ClientSession
 from telegram import Update
+from telegram.ext import ContextTypes
 
+from bot.queries import insert_user
 from bot.settings import enable_logger
 
 SERVER_HOST = os.environ.get("SERVER_HOST", "localhost")
@@ -23,16 +25,11 @@ async def get_data_from_update(update: Update) -> dict:
     return data
 
 
-async def post_user(admin_key: str, username: str, chat_id: str) -> int:
-    async with ClientSession() as session:
-        url = f"http://{SERVER_HOST}:8080/api/users/post/"
-        data = {
-            "admin_key": admin_key,
-            "username": username,
-            "chat_id": chat_id,
-        }
-        async with session.post(url=url, json=data) as resp:
-            return resp.status
+async def post_user(admin_key: str, username: str, chat_id: int) -> int:
+    if admin_key == os.environ.get("ADMIN_KEY"):
+        await insert_user(username=username, chat_id=chat_id)
+        return True
+    return False
 
 
 async def get_chat_ids() -> list:

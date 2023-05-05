@@ -76,11 +76,15 @@ async def check_admin_key(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     )
 
     admin_key = update.message.text
-    status = await post_user(admin_key=admin_key, username=data["username"], chat_id=data["chat_id"])
-    if status == 201:
+    user_created = await post_user(
+        admin_key=admin_key,
+        username=data["username"],
+        chat_id=data["chat_id"]
+    )
+    if user_created:
         text = "Пользователь добавлен"
     else:
-        text = f"Не удалось добавить пользователя (Ошибка {status})"
+        text = "Не удалось добавить пользователя"
 
     await context.bot.send_message(chat_id=data["chat_id"], text=text)
     return ConversationHandler.END

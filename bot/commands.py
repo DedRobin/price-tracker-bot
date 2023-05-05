@@ -175,11 +175,11 @@ async def show_products(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     if data["chat_id"] in chat_ids:
         products = await get_user_products(username=data["username"])
         context.user_data["products"] = {
-            index: product for index, product in enumerate(products)
+            callback_index: product for callback_index, product in enumerate(products)
         }
         keyboard = [
-            [InlineKeyboardButton(text=product.get("name"), callback_data=index)]
-            for index, product in context.user_data["products"].items()
+            [InlineKeyboardButton(text=product.get("name"), callback_data=callback_index)]
+            for callback_index, product in context.user_data["products"].items()
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
         await context.bot.send_message(

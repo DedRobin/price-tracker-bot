@@ -7,6 +7,7 @@ from telegram.ext import ContextTypes
 
 from bot.queries import insert_user, select_users, select_products, exist_product, add_user_for_product, insert_product
 from bot.settings import enable_logger
+from store.database.models import Product
 
 SERVER_HOST = os.environ.get("SERVER_HOST", "localhost")
 
@@ -54,7 +55,7 @@ async def check_product_in_db(username: str, link: str) -> bool:
     return True if products else False
 
 
-async def add_product(username: str, link: str) -> int:
+async def add_product(username: str, link: str, name: str = "Unnamed Product") -> int:
     product_exists = await exist_product(link=link)
     if product_exists:
         await add_user_for_product(
@@ -65,7 +66,7 @@ async def add_product(username: str, link: str) -> int:
         await insert_product(
             username=username,
             link=link,
-            # name=name,
+            name=name,
             # current_price=current_price,
         )
     return True
@@ -81,14 +82,23 @@ async def add_product(username: str, link: str) -> int:
 
 
 async def get_user_products(username: str) -> list[dict]:
-    async with ClientSession() as session:
-        url = f"http://{SERVER_HOST}:8080/api/products/"
-        params = {
-            "username": username,
-        }
-        async with session.get(url=url, params=params) as resp:
-            products = await resp.json()
-            return products
+    params = {"username": username}
+    products = await select_products(params)
+    product_list = []
+    for product in products:
+        product_list.append(
+            {
+                "id": product.id,
+                "name": product.name,
+                "link": product.product_link,
+                "current_price": product.current_price,
+                "previous_price": product.previous_price,
+                "updated_at": product.updated_at.strftime("%d.%m.%Y, %H:%M:%S"),
+                "chat_ids": [user.chat_id for user in product.users],
+            }
+        )
+
+    return product_list
 
 
 async def untrack_product(username: str, product_id: int):

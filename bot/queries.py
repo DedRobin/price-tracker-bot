@@ -42,7 +42,7 @@ async def exist_product(link: str) -> bool:
 
 
 async def insert_product(
-        username: str, link: str, name: str, current_price: float
+        username: str, link: str, name: str = None, current_price: float = 0
 ) -> None:
     """Add a new product for tracking if it doesn't exist"""
 
@@ -80,6 +80,8 @@ async def add_user_for_product(username: str, link: str) -> None:
 async def select_products(params) -> list[Product]:
     """Get products by some filter"""
 
+    logger.info("Receiving products")
+
     async_session = await create_session()
     async with async_session() as session:
         username = params.get("username")
@@ -97,7 +99,9 @@ async def select_products(params) -> list[Product]:
 
         select_query = select_query.options(selectinload(Product.users))
         products = await session.scalars(select_query)
-        logger.info("Getting all products")
+        products = products.all()
+
+        logger.info("Products received")
         return products
 
 

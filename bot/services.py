@@ -5,7 +5,7 @@ from aiohttp import ClientSession
 from telegram import Update
 from telegram.ext import ContextTypes
 
-from bot.queries import insert_user, select_users
+from bot.queries import insert_user, select_users, select_products, exist_product, add_user_for_product, insert_product
 from bot.settings import enable_logger
 
 SERVER_HOST = os.environ.get("SERVER_HOST", "localhost")
@@ -37,7 +37,7 @@ async def get_chat_ids() -> list:
 
     users = await select_users()
     logger.info("Get chat IDs")
-    chat_ids = [user.id for user in users]
+    chat_ids = [user.chat_id for user in users]
     return chat_ids
 
 
@@ -49,23 +49,35 @@ async def check_link(link: str) -> bool:
 
 
 async def check_product_in_db(username: str, link: str) -> bool:
-    async with ClientSession() as session:
-        url = f"http://{SERVER_HOST}:8080/api/products/"
-        params = {"username": username, "link": link}
-        async with session.get(url=url, params=params) as resp:
-            data = await resp.json()
-    return True if data else False
+    params = {"username": username, "link": link}
+    products = await select_products(params)
+    return True if products else False
 
 
 async def add_product(username: str, link: str) -> int:
-    async with ClientSession() as session:
-        url = f"http://{SERVER_HOST}:8080/api/products/"
-        data = {
-            "username": username,
-            "link": link,
-        }
-        async with session.post(url=url, json=data) as resp:
-            return resp.status
+    product_exists = await exist_product(link=link)
+    if product_exists:
+        await add_user_for_product(
+            username=username,
+            link=link,
+        )
+    else:
+        await insert_product(
+            username=username,
+            link=link,
+            # name=name,
+            # current_price=current_price,
+        )
+    return True
+
+    # async with ClientSession() as session:
+    #     url = f"http://{SERVER_HOST}:8080/api/products/"
+    #     data = {
+    #         "username": username,
+    #         "link": link,
+    #     }
+    #     async with session.post(url=url, json=data) as resp:
+    #         return resp.status
 
 
 async def get_user_products(username: str) -> list[dict]:

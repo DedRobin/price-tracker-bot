@@ -151,11 +151,11 @@ async def track_product(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
         else:
             # name, price = await parse_onliner(url=link)
 
-            status = await add_product(username=data["username"], link=link)
-            if status == 201:
+            is_added = await add_product(username=data["username"], link=link)
+            if is_added:
                 text = "Товар был добавлен для отслеживается"
             else:
-                text = f"Не удалось добавить товар (Ошибка {status})"
+                text = "Не удалось добавить товар"
 
         await context.bot.send_message(chat_id=data["chat_id"], text=text)
         return ConversationHandler.END

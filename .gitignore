@@ -3,3 +3,4 @@ venv
 .idea
 bot/__pycache__/
 database.db
+test_bot

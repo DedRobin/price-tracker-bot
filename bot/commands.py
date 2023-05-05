@@ -202,8 +202,8 @@ async def get_product_actions(
     )
 
     query = update.callback_query
-    index = int(query.data)
-    product = context.user_data["products"][index]
+    callback_index = int(query.data)
+    product = context.user_data["products"][callback_index]
     product_id = product["id"]
 
     keyboard = [

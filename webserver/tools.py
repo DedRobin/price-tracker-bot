@@ -1,9 +1,7 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.responses import Response
 from telegram import Update
 from telegram.ext import Application
-
-from webserver.models import BotRequest
 
 
 def create_app(bot_app: Application) -> FastAPI:
@@ -14,11 +12,10 @@ def create_app(bot_app: Application) -> FastAPI:
         return {"message": "Bot is running"}
 
     @web_app.post("/telegram")
-    async def telegram(request: BotRequest):
-        data = request.dict()
-        await bot_app.update_queue.put(
-            Update.de_json(data=data, bot=bot_app.bot)
-        )
+    async def telegram(request: Request):
+        data = await request.json()
+        update = Update.de_json(data=data, bot=bot_app.bot)
+        await bot_app.update_queue.put(update)
         return Response()
 
     return web_app

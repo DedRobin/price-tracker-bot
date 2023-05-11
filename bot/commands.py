@@ -178,7 +178,7 @@ async def show_products(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
             callback_index: product for callback_index, product in enumerate(products)
         }
         keyboard = [
-            [InlineKeyboardButton(text=product.get("name"), callback_data=callback_index)]
+            [InlineKeyboardButton(text=product.get("name"), callback_data=str(callback_index))]
             for callback_index, product in context.user_data["products"].items()
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)

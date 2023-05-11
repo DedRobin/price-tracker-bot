@@ -1,7 +1,7 @@
 import os
 import asyncio
 import uvicorn
-from telegram.ext import ApplicationBuilder, ContextTypes, Application
+from telegram.ext import ApplicationBuilder, ContextTypes
 
 from bot.handlers import edit_product_handler, start_handler, track_product_handler, add_user_handler
 from bot.settings import enable_logger
@@ -9,6 +9,7 @@ from bot.custom_entities import CustomContext
 from webserver.tools import create_app
 
 
+# def main():
 async def main():
     token = os.environ.get("BOT_TOKEN")
     webhook_url = os.environ.get("WEBHOOK_URL")
@@ -20,7 +21,7 @@ async def main():
 
     context_types = ContextTypes(context=CustomContext)
 
-    application = Application.builder().token(token).updater(None).context_types(context_types).build()
+    application = ApplicationBuilder().token(token).context_types(context_types).build()
 
     application.add_handler(start_handler)
     application.add_handler(track_product_handler)
@@ -36,7 +37,7 @@ async def main():
             app=web_app,
             port=port,
             use_colors=False,
-            host=host,
+            host=host
         )
     )
 

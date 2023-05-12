@@ -17,6 +17,7 @@ from source.bot.services import (
     get_user_products,
     untrack_product,
 )
+from source.parsers import onliner
 from source.settings import enable_logger
 from source.bot.states import STATES
 
@@ -147,9 +148,9 @@ async def track_product(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
         if product_is_existed:
             text = "Такая ссылка уже отслеживается"
         else:
-            # name, price = await parse_onliner(url=link)
+            name, price = await onliner.parse(url=link)
 
-            is_added = await add_product(username=data["username"], link=link)
+            is_added = await add_product(username=data["username"], link=link, name=name, price=price)
             if is_added:
                 text = "Товар был добавлен для отслеживается"
             else:

@@ -54,30 +54,21 @@ async def check_product_in_db(username: str, link: str) -> bool:
     return True if products else False
 
 
-async def add_product(username: str, link: str, name: str = "Unnamed Product") -> int:
+async def add_product(username: str, link: str, name: str, price: float) -> int:
     product_exists = await exist_product(link=link)
     if product_exists:
         await add_user_for_product(
             username=username,
-            link=link,
+            link=link
         )
     else:
         await insert_product(
             username=username,
             link=link,
             name=name,
-            # current_price=current_price,
+            price=price
         )
     return True
-
-    # async with ClientSession() as session:
-    #     url = f"http://{SERVER_HOST}:8080/api/products/"
-    #     data = {
-    #         "username": username,
-    #         "link": link,
-    #     }
-    #     async with session.post(url=url, json=data) as resp:
-    #         return resp.status
 
 
 async def get_user_products(username: str) -> list[dict]:

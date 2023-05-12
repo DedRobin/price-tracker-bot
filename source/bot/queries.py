@@ -42,19 +42,18 @@ async def exist_product(link: str) -> bool:
 
 
 async def insert_product(
-        username: str, link: str, name: str = None, current_price: float = 0
+        username: str, link: str, name: str, price: float = 0
 ) -> None:
     """Add a new product for tracking if it doesn't exist"""
 
     async_session = await create_session()
     async with async_session() as session:
-        # test_user = await session.get(User, 1)
         user = await session.scalar(select(User).where(User.username == username))
         product = Product(
             product_link=link,
             name=name,
-            current_price=current_price,
-            previous_price=current_price,
+            current_price=price,
+            previous_price=price,
             updated_at=datetime.now(),
         )
         product.users.append(user)

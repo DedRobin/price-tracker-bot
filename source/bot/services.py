@@ -4,7 +4,8 @@ import re
 from aiohttp import ClientSession
 from telegram import Update
 
-from source.bot.queries import insert_user, select_users, select_products, exist_product, add_user_for_product, insert_product
+from source.bot.queries import insert_user, select_users, select_products, exist_product, add_user_for_product, \
+    insert_product, remove_user_from_special_product
 from source.settings import enable_logger
 
 SERVER_HOST = os.environ.get("SERVER_HOST", "localhost")
@@ -100,11 +101,7 @@ async def get_user_products(username: str) -> list[dict]:
 
 
 async def untrack_product(username: str, product_id: int):
-    async with ClientSession() as session:
-        url = f"http://{SERVER_HOST}:8080/api/products/{product_id}/"
-        data = {
-            "action": "remove_user",
-            "username": username,
-        }
-        async with session.put(url=url, json=data) as resp:
-            return resp.status
+    """Untrack a special product"""
+
+    await remove_user_from_special_product(username=username, product_id=product_id)
+    logger.info("Untrack the product")

@@ -77,6 +77,21 @@ async def add_user_for_product(username: str, link: str) -> None:
         await session.commit()
 
 
+async def remove_user_from_special_product(username: str, product_id: int) -> None:
+    """Delete a special user from product tracking"""
+
+    async_session = await create_session()
+    async with async_session() as session:
+        user = await session.scalar(select(User).where(User.username == username))
+        product = await session.scalar(
+            select(Product)
+            .where(Product.id == product_id)
+            .options(selectinload(Product.users))
+        )
+        product.users.remove(user)
+        await session.commit()
+
+
 async def select_products(params: dict = None) -> list[Product]:
     """Get products by some filter"""
 

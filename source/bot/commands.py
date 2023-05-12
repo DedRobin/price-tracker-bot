@@ -237,19 +237,13 @@ async def remove_product(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     await query.answer()
 
     product_id = query.data.split(".")[0]
-    status = await untrack_product(
+    await untrack_product(
         username=data["username"], product_id=int(product_id)
     )
-    if status == 200:
-        await context.bot.send_message(
-            chat_id=data["chat_id"],
-            text="Товар удален",
-        )
-    else:
-        await context.bot.send_message(
-            chat_id=data["chat_id"],
-            text=f"Что-то пошло не так (Ошибка {status})",
-        )
+    await context.bot.send_message(
+        chat_id=data["chat_id"],
+        text="Товар удален",
+    )
 
     return ConversationHandler.END
 
@@ -266,4 +260,3 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     await update.message.reply_text("Вы закончили диалог")
 
     return ConversationHandler.END
-

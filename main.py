@@ -3,10 +3,12 @@ import asyncio
 import uvicorn
 from telegram.ext import ApplicationBuilder, ContextTypes
 
-from bot.handlers import edit_product_handler, start_handler, track_product_handler, add_user_handler
-from bot.settings import enable_logger
-from bot.custom_entities import CustomContext
-from webserver.tools import create_app
+from source.bot.handlers import edit_product_handler, start_handler, track_product_handler, add_user_handler
+from source.settings import enable_logger
+from source.bot.custom_entities import CustomContext
+from source.webserver.tools import create_app
+
+from source.bot.jobs import send_notifications
 
 
 # def main():
@@ -27,6 +29,9 @@ async def main():
     application.add_handler(track_product_handler)
     application.add_handler(edit_product_handler)
     application.add_handler(add_user_handler)
+
+    job_queue = application.job_queue
+    job_queue.run_repeating(send_notifications, interval=1000, first=1)
 
     await application.bot.set_webhook(url=f"{webhook_url}/telegram")
 

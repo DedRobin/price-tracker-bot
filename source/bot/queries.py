@@ -1,11 +1,11 @@
 from datetime import datetime
 
-from sqlalchemy import exists, select, update
+from sqlalchemy import exists, select
 from sqlalchemy.orm import selectinload
 
-from store.database.models import Product, User
-from store.database.tools import create_session
-from bot.settings import enable_logger
+from source.store.database.models import Product, User
+from source.store.database.tools import create_session
+from source.settings import enable_logger
 
 logger = enable_logger(__name__)
 
@@ -77,25 +77,27 @@ async def add_user_for_product(username: str, link: str) -> None:
         await session.commit()
 
 
-async def select_products(params) -> list[Product]:
+async def select_products(params: dict = None) -> list[Product]:
     """Get products by some filter"""
 
     logger.info("Receiving products")
 
     async_session = await create_session()
     async with async_session() as session:
-        username = params.get("username")
-        link = params.get("link")
 
         select_query = select(Product)
 
-        if username:
-            user_query = select(User).where(User.username == username)
-            user = await session.scalar(user_query)
+        if params:
+            username = params.get("username")
+            link = params.get("link")
 
-            select_query = select_query.where(Product.users.contains(user))
-        if link:
-            select_query = select_query.where(Product.product_link == link)
+            if username:
+                user_query = select(User).where(User.username == username)
+                user = await session.scalar(user_query)
+
+                select_query = select_query.where(Product.users.contains(user))
+            if link:
+                select_query = select_query.where(Product.product_link == link)
 
         select_query = select_query.options(selectinload(Product.users))
         products = await session.scalars(select_query)
@@ -118,24 +120,24 @@ async def get_product(product_id: int):
         return product
 
 
-async def update_product(product_id: int, product: dict) -> None:
-    """Update a product data by it ID"""
+async def update_product(
+        product: Product,
+        price: float = None,
+        name: str = None
+) -> Product:
+    """Update a specific product"""
 
     async_session = await create_session()
     async with async_session() as session:
-        update_query = (
-            update(Product)
-            .where(Product.id == product_id)
-            .values(
-                product_link=product.get("link"),
-                name=product.get("name"),
-                current_price=product.get("current_price"),
-                previous_price=product.get("previous_price"),
-                updated_at=datetime.now(),
-            )
-        )
-        await session.execute(update_query)
+        select_query = select(Product).where(Product.id == product.id).options(selectinload(Product.users))
+        product = await session.scalar(select_query)
+        if name:
+            product.name = name
+        if price:
+            product.previous_price = product.current_price
+            product.current_price = price
         await session.commit()
+        return product
 
 
 async def update_users_for_special_product(username: str, product_id: int) -> None:

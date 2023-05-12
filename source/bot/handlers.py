@@ -9,7 +9,7 @@ from telegram.ext import (
 )
 from telegram.warnings import PTBUserWarning
 
-from bot.commands import (
+from source.bot.commands import (
     get_product_actions,
     remove_product,
     show_products,
@@ -21,7 +21,7 @@ from bot.commands import (
     track_product,
     cancel
 )
-from bot.states import STATES
+from source.bot.states import STATES
 
 filterwarnings(
     action="ignore", message=r".*CallbackQueryHandler", category=PTBUserWarning

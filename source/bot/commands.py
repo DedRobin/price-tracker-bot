@@ -1,6 +1,4 @@
 import inspect
-import os
-
 from telegram import (
     InlineKeyboardButton,
     InlineKeyboardMarkup,
@@ -9,7 +7,7 @@ from telegram import (
 )
 from telegram.ext import ContextTypes, ConversationHandler
 
-from bot.services import (
+from source.bot.services import (
     add_product,
     check_link,
     post_user,
@@ -19,8 +17,8 @@ from bot.services import (
     get_user_products,
     untrack_product,
 )
-from bot.settings import enable_logger
-from bot.states import STATES
+from source.settings import enable_logger
+from source.bot.states import STATES
 
 logger = enable_logger(__name__)
 
@@ -268,3 +266,4 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     await update.message.reply_text("Вы закончили диалог")
 
     return ConversationHandler.END
+

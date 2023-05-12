@@ -3,11 +3,9 @@ import re
 
 from aiohttp import ClientSession
 from telegram import Update
-from telegram.ext import ContextTypes
 
-from bot.queries import insert_user, select_users, select_products, exist_product, add_user_for_product, insert_product
-from bot.settings import enable_logger
-from store.database.models import Product
+from source.bot.queries import insert_user, select_users, select_products, exist_product, add_user_for_product, insert_product
+from source.settings import enable_logger
 
 SERVER_HOST = os.environ.get("SERVER_HOST", "localhost")
 

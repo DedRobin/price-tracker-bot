@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import exists, select
+from sqlalchemy import exists, select, delete
 from sqlalchemy.orm import selectinload
 
 from source.store.database.models import Product, User
@@ -42,7 +42,7 @@ async def exist_product(link: str) -> bool:
 
 
 async def insert_product(
-        username: str, link: str, name: str, price: float = 0
+        username: str, link: str, name: str, price: float
 ) -> None:
     """Add a new product for tracking if it doesn't exist"""
 
@@ -104,12 +104,14 @@ async def select_products(params: dict = None) -> list[Product]:
         if params:
             username = params.get("username")
             link = params.get("link")
+            product_id = params.get("product_id")
 
             if username:
                 user_query = select(User).where(User.username == username)
                 user = await session.scalar(user_query)
-
                 select_query = select_query.where(Product.users.contains(user))
+            if product_id:
+                select_query = select_query.where(Product.id == product_id)
             if link:
                 select_query = select_query.where(Product.product_link == link)
 
@@ -152,6 +154,16 @@ async def update_product(
             product.current_price = price
         await session.commit()
         return product
+
+
+async def remove_product(product_id: int) -> None:
+    """Delete a special product from the table"""
+
+    async_session = await create_session()
+    async with async_session() as session:
+        delete_query = delete(Product).where(Product.id == product_id)
+        await session.execute(delete_query)
+        await session.commit()
 
 
 async def update_users_for_special_product(username: str, product_id: int) -> None:

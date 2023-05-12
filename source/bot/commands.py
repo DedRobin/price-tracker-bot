@@ -16,6 +16,7 @@ from source.bot.services import (
     get_data_from_update,
     get_user_products,
     untrack_product,
+    check_relationship,
 )
 from source.parsers import onliner
 from source.settings import enable_logger
@@ -237,14 +238,12 @@ async def remove_product(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     query = update.callback_query
     await query.answer()
 
-    product_id = query.data.split(".")[0]
-    await untrack_product(
-        username=data["username"], product_id=int(product_id)
-    )
-    await context.bot.send_message(
-        chat_id=data["chat_id"],
-        text="Товар удален",
-    )
+    product_id = int(query.data.split(".")[0])
+
+    await untrack_product(username=data["username"], product_id=product_id)
+    await check_relationship(product_id=product_id)
+
+    await context.bot.send_message(chat_id=data["chat_id"], text="Товар удален")
 
     return ConversationHandler.END
 

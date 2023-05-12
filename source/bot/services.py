@@ -5,7 +5,7 @@ from aiohttp import ClientSession
 from telegram import Update
 
 from source.bot.queries import insert_user, select_users, select_products, exist_product, add_user_for_product, \
-    insert_product, remove_user_from_special_product
+    insert_product, remove_user_from_special_product, remove_product
 from source.settings import enable_logger
 
 SERVER_HOST = os.environ.get("SERVER_HOST", "localhost")
@@ -96,3 +96,14 @@ async def untrack_product(username: str, product_id: int):
 
     await remove_user_from_special_product(username=username, product_id=product_id)
     logger.info("Untrack the product")
+
+
+async def check_relationship(product_id: int) -> None:
+    """Check the relationship of users with products"""
+
+    params = {"product_id": product_id}
+    product = await select_products(params)
+    product = product[0]
+    users = product.users
+    if not users:
+        await remove_product(product_id)

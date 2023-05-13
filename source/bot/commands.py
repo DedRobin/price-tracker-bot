@@ -1,6 +1,4 @@
 import inspect
-import os
-
 from telegram import (
     InlineKeyboardButton,
     InlineKeyboardMarkup,
@@ -9,7 +7,7 @@ from telegram import (
 )
 from telegram.ext import ContextTypes, ConversationHandler
 
-from bot.services import (
+from source.bot.services import (
     add_product,
     check_link,
     post_user,
@@ -18,11 +16,13 @@ from bot.services import (
     get_data_from_update,
     get_user_products,
     untrack_product,
+    check_relationship,
 )
-from bot.settings import get_logger
-from bot.states import STATES
+from source.parsers import onliner
+from source.settings import enable_logger
+from source.bot.states import STATES
 
-logger = get_logger(__name__)
+logger = enable_logger(__name__)
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -76,11 +76,15 @@ async def check_admin_key(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     )
 
     admin_key = update.message.text
-    status = await post_user(admin_key=admin_key, username=data["username"], chat_id=data["chat_id"])
-    if status == 201:
+    user_created = await post_user(
+        admin_key=admin_key,
+        username=data["username"],
+        chat_id=data["chat_id"]
+    )
+    if user_created:
         text = "Пользователь добавлен"
     else:
-        text = f"Не удалось добавить пользователя (Ошибка {status})"
+        text = "Не удалось добавить пользователя"
 
     await context.bot.send_message(chat_id=data["chat_id"], text=text)
     return ConversationHandler.END
@@ -145,13 +149,13 @@ async def track_product(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
         if product_is_existed:
             text = "Такая ссылка уже отслеживается"
         else:
-            # name, price = await parse_onliner(url=link)
+            name, price = await onliner.parse(url=link)
 
-            status = await add_product(username=data["username"], link=link)
-            if status == 201:
+            is_added = await add_product(username=data["username"], link=link, name=name, price=price)
+            if is_added:
                 text = "Товар был добавлен для отслеживается"
             else:
-                text = f"Не удалось добавить товар (Ошибка {status})"
+                text = "Не удалось добавить товар"
 
         await context.bot.send_message(chat_id=data["chat_id"], text=text)
         return ConversationHandler.END
@@ -171,11 +175,11 @@ async def show_products(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     if data["chat_id"] in chat_ids:
         products = await get_user_products(username=data["username"])
         context.user_data["products"] = {
-            index: product for index, product in enumerate(products)
+            callback_index: product for callback_index, product in enumerate(products)
         }
         keyboard = [
-            [InlineKeyboardButton(text=product.get("name"), callback_data=index)]
-            for index, product in context.user_data["products"].items()
+            [InlineKeyboardButton(text=product.get("name"), callback_data=str(callback_index))]
+            for callback_index, product in context.user_data["products"].items()
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
         await context.bot.send_message(
@@ -198,8 +202,8 @@ async def get_product_actions(
     )
 
     query = update.callback_query
-    index = int(query.data)
-    product = context.user_data["products"][index]
+    callback_index = int(query.data)
+    product = context.user_data["products"][callback_index]
     product_id = product["id"]
 
     keyboard = [
@@ -234,20 +238,12 @@ async def remove_product(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     query = update.callback_query
     await query.answer()
 
-    product_id = query.data.split(".")[0]
-    status = await untrack_product(
-        username=data["username"], product_id=int(product_id)
-    )
-    if status == 200:
-        await context.bot.send_message(
-            chat_id=data["chat_id"],
-            text="Товар удален",
-        )
-    else:
-        await context.bot.send_message(
-            chat_id=data["chat_id"],
-            text=f"Что-то пошло не так (Ошибка {status})",
-        )
+    product_id = int(query.data.split(".")[0])
+
+    await untrack_product(username=data["username"], product_id=product_id)
+    await check_relationship(product_id=product_id)
+
+    await context.bot.send_message(chat_id=data["chat_id"], text="Товар удален")
 
     return ConversationHandler.END
 

@@ -1,7 +1,7 @@
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from source.store.database.models import Base
-from source.store.database.settings import DB_URL, DB_ECHO
+from source.store.database.settings import DB_ECHO, DB_URL
 
 
 async def create_session():

@@ -10,16 +10,16 @@ from telegram.ext import (
 from telegram.warnings import PTBUserWarning
 
 from source.bot.commands import (
+    add_user,
+    cancel,
+    check_admin_key,
     get_product_actions,
     remove_product,
     show_products,
     skip_track,
     start,
-    add_user,
-    check_admin_key,
     track_menu,
     track_product,
-    cancel
 )
 from source.bot.states import STATES
 
@@ -39,9 +39,7 @@ add_user_handler = ConversationHandler(
             MessageHandler(filters.TEXT, check_admin_key),
         ]
     },
-    fallbacks=[
-        CommandHandler("cancel", start)
-    ],
+    fallbacks=[CommandHandler("cancel", start)],
 )
 
 track_product_handler = ConversationHandler(

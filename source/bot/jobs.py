@@ -1,9 +1,9 @@
 from aiohttp import ClientSession
 from telegram.ext import ContextTypes
 
-from source.settings import enable_logger
-from source.parsers import onliner
 from source.bot.queries import select_products, update_product
+from source.parsers import onliner
+from source.settings import enable_logger
 
 logger = enable_logger(__name__)
 
@@ -42,6 +42,8 @@ async def send_notifications(context: ContextTypes.DEFAULT_TYPE):
 Новая цена = {current_price} BYN"""
 
                 for chat_id in chat_ids:
-                    await context.bot.send_message(chat_id=chat_id, text=notification_text)
+                    await context.bot.send_message(
+                        chat_id=chat_id, text=notification_text
+                    )
 
         logger.info("All notifications have been sent")

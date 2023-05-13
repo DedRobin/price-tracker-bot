@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+
 from telegram.ext import Application, CallbackContext, ExtBot
 
 
@@ -18,9 +19,9 @@ class CustomContext(CallbackContext[ExtBot, dict, dict, dict]):
 
     @classmethod
     def from_update(
-            cls,
-            update: object,
-            application: "Application",
+        cls,
+        update: object,
+        application: "Application",
     ) -> "CustomContext":
         if isinstance(update, WebhookUpdate):
             return cls(application=application, user_id=update.user_id)

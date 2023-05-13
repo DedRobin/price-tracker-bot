@@ -1,11 +1,18 @@
 import os
 import re
 
-from aiohttp import ClientSession
 from telegram import Update
 
-from source.bot.queries import insert_user, select_users, select_products, exist_product, add_user_for_product, \
-    insert_product, remove_user_from_special_product, remove_product
+from source.bot.queries import (
+    add_user_for_product,
+    exist_product,
+    insert_product,
+    insert_user,
+    remove_product,
+    remove_user_from_special_product,
+    select_products,
+    select_users,
+)
 from source.settings import enable_logger
 
 SERVER_HOST = os.environ.get("SERVER_HOST", "localhost")
@@ -57,17 +64,9 @@ async def check_product_in_db(username: str, link: str) -> bool:
 async def add_product(username: str, link: str, name: str, price: float) -> int:
     product_exists = await exist_product(link=link)
     if product_exists:
-        await add_user_for_product(
-            username=username,
-            link=link
-        )
+        await add_user_for_product(username=username, link=link)
     else:
-        await insert_product(
-            username=username,
-            link=link,
-            name=name,
-            price=price
-        )
+        await insert_product(username=username, link=link, name=name, price=price)
     return True
 
 

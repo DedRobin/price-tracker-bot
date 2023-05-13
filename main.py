@@ -1,21 +1,25 @@
-import os
 import asyncio
+import os
+
 import uvicorn
 from telegram.ext import ApplicationBuilder, ContextTypes
 
-from source.bot.handlers import edit_product_handler, start_handler, track_product_handler, add_user_handler
-from source.settings import enable_logger
 from source.bot.custom_entities import CustomContext
-from source.webserver.tools import create_app
-
+from source.bot.handlers import (
+    add_user_handler,
+    edit_product_handler,
+    start_handler,
+    track_product_handler,
+)
 from source.bot.jobs import send_notifications
+from source.settings import enable_logger
+from source.webserver.tools import create_app
 
 
 # def main():
 async def main():
     token = os.environ.get("BOT_TOKEN")
     webhook_url = os.environ.get("WEBHOOK_URL")
-    admin_chat_id = os.environ.get("ADMIN_CHAT_ID")
     host = os.environ.get("HOST", "127.0.0.1")
     port = int(os.environ.get("PORT", 5000))
 
@@ -38,12 +42,7 @@ async def main():
     web_app = create_app(bot_app=application)
 
     webserver = uvicorn.Server(
-        config=uvicorn.Config(
-            app=web_app,
-            port=port,
-            use_colors=False,
-            host=host
-        )
+        config=uvicorn.Config(app=web_app, port=port, use_colors=False, host=host)
     )
 
     # Run application and webserver together

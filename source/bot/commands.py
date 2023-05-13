@@ -1,4 +1,5 @@
 import inspect
+
 from telegram import (
     InlineKeyboardButton,
     InlineKeyboardMarkup,
@@ -10,17 +11,17 @@ from telegram.ext import ContextTypes, ConversationHandler
 from source.bot.services import (
     add_product,
     check_link,
-    post_user,
     check_product_in_db,
+    check_relationship,
     get_chat_ids,
     get_data_from_update,
     get_user_products,
+    post_user,
     untrack_product,
-    check_relationship,
 )
+from source.bot.states import STATES
 from source.parsers import onliner
 from source.settings import enable_logger
-from source.bot.states import STATES
 
 logger = enable_logger(__name__)
 
@@ -67,6 +68,9 @@ async def add_user(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 
 async def check_admin_key(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    admin_key = update.message.text
+    await update.message.delete()
+
     data = await get_data_from_update(update)
     command = inspect.currentframe().f_code.co_name
     logger.info(
@@ -75,11 +79,8 @@ async def check_admin_key(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         )
     )
 
-    admin_key = update.message.text
     user_created = await post_user(
-        admin_key=admin_key,
-        username=data["username"],
-        chat_id=data["chat_id"]
+        admin_key=admin_key, username=data["username"], chat_id=data["chat_id"]
     )
     if user_created:
         text = "Пользователь добавлен"
@@ -151,7 +152,9 @@ async def track_product(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
         else:
             name, price = await onliner.parse(url=link)
 
-            is_added = await add_product(username=data["username"], link=link, name=name, price=price)
+            is_added = await add_product(
+                username=data["username"], link=link, name=name, price=price
+            )
             if is_added:
                 text = "Товар был добавлен для отслеживается"
             else:
@@ -178,7 +181,11 @@ async def show_products(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
             callback_index: product for callback_index, product in enumerate(products)
         }
         keyboard = [
-            [InlineKeyboardButton(text=product.get("name"), callback_data=str(callback_index))]
+            [
+                InlineKeyboardButton(
+                    text=product.get("name"), callback_data=str(callback_index)
+                )
+            ]
             for callback_index, product in context.user_data["products"].items()
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
@@ -191,7 +198,7 @@ async def show_products(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
 
 
 async def get_product_actions(
-        update: Update, context: ContextTypes.DEFAULT_TYPE
+    update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> int:
     data = await get_data_from_update(update)
     command = inspect.currentframe().f_code.co_name

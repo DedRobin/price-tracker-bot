@@ -1,11 +1,11 @@
 from datetime import datetime
 
-from sqlalchemy import exists, select, delete
+from sqlalchemy import delete, exists, select
 from sqlalchemy.orm import selectinload
 
+from source.settings import enable_logger
 from source.store.database.models import Product, User
 from source.store.database.tools import create_session
-from source.settings import enable_logger
 
 logger = enable_logger(__name__)
 
@@ -41,9 +41,7 @@ async def exist_product(link: str) -> bool:
         return True if is_existed else False
 
 
-async def insert_product(
-        username: str, link: str, name: str, price: float
-) -> None:
+async def insert_product(username: str, link: str, name: str, price: float) -> None:
     """Add a new product for tracking if it doesn't exist"""
 
     async_session = await create_session()
@@ -98,7 +96,6 @@ async def select_products(params: dict = None) -> list[Product]:
 
     async_session = await create_session()
     async with async_session() as session:
-
         select_query = select(Product)
 
         if params:
@@ -137,15 +134,17 @@ async def get_product(product_id: int):
 
 
 async def update_product(
-        product: Product,
-        price: float = None,
-        name: str = None
+    product: Product, price: float = None, name: str = None
 ) -> Product:
     """Update a specific product"""
 
     async_session = await create_session()
     async with async_session() as session:
-        select_query = select(Product).where(Product.id == product.id).options(selectinload(Product.users))
+        select_query = (
+            select(Product)
+            .where(Product.id == product.id)
+            .options(selectinload(Product.users))
+        )
         product = await session.scalar(select_query)
         if name:
             product.name = name

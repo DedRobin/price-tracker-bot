@@ -1,1 +1,1 @@
-Telegram Bot for https://github.com/DedRobin/price-tracker
+Telegram bot for sending notifications about price changes

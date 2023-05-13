@@ -8,6 +8,7 @@ COPY requirements_deploy.txt requirements.txt
 COPY . /app
 
 RUN pip install --trusted-host pypi.org --no-cache-dir --upgrade pip && \
-    pip install --trusted-host pypi.org --no-cache-dir -r requirements.txt
+    pip install --trusted-host pypi.org --no-cache-dir -r requirements.txt && \
+    pip install python-telegram-bot[job-queue]
 
 WORKDIR /app

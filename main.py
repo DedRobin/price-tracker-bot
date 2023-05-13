@@ -17,7 +17,7 @@ async def main():
     webhook_url = os.environ.get("WEBHOOK_URL")
     admin_chat_id = os.environ.get("ADMIN_CHAT_ID")
     host = os.environ.get("HOST", "127.0.0.1")
-    port = os.environ.get("PORT", 5000)
+    port = int(os.environ.get("PORT", 5000))
 
     enable_logger()
 

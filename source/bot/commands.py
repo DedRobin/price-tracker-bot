@@ -1,5 +1,6 @@
 import inspect
 
+from aiohttp import ClientSession
 from telegram import (
     InlineKeyboardButton,
     InlineKeyboardMarkup,
@@ -150,15 +151,16 @@ async def track_product(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
         if product_is_existed:
             text = "Такая ссылка уже отслеживается"
         else:
-            name, price = await onliner.parse(url=link)
+            async with ClientSession() as session:
+                name, price = await onliner.parse(session=session, url=link)
 
-            is_added = await add_product(
-                username=data["username"], link=link, name=name, price=price
-            )
-            if is_added:
-                text = "Товар был добавлен для отслеживается"
-            else:
-                text = "Не удалось добавить товар"
+                is_added = await add_product(
+                    username=data["username"], link=link, name=name, price=price
+                )
+                if is_added:
+                    text = "Товар был добавлен для отслеживается"
+                else:
+                    text = "Не удалось добавить товар"
 
         await context.bot.send_message(chat_id=data["chat_id"], text=text)
         return ConversationHandler.END
@@ -198,7 +200,7 @@ async def show_products(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
 
 
 async def get_product_actions(
-    update: Update, context: ContextTypes.DEFAULT_TYPE
+        update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> int:
     data = await get_data_from_update(update)
     command = inspect.currentframe().f_code.co_name

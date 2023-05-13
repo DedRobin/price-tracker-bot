@@ -1,3 +1,4 @@
+from aiohttp import ClientSession
 from telegram.ext import ContextTypes
 
 from source.settings import enable_logger
@@ -11,34 +12,36 @@ async def send_notifications(context: ContextTypes.DEFAULT_TYPE):
     """Sending notifications about price changes for each product"""
 
     products = await select_products()
-    for product in products:
-        url = product.product_link
 
-        # Received a product price by URL
-        _, price = await onliner.parse(url)
+    async with ClientSession() as session:
+        for product in products:
+            url = product.product_link
 
-        if price != product.current_price:
-            updated_product = await update_product(product=product, price=price)
-            chat_ids = [user.chat_id for user in updated_product.users]
+            # Received a product price by URL
+            _, price = await onliner.parse(session, url)
 
-            current_price = updated_product.current_price
-            previous_price = updated_product.previous_price
-            link = updated_product.product_link
-            name = updated_product.name
+            if price != product.current_price:
+                updated_product = await update_product(product=product, price=price)
+                chat_ids = [user.chat_id for user in updated_product.users]
 
-            different = current_price - previous_price
-            word = "снизилась" if different < 0 else "выросла" ""
-            emoji = "\U0001F601" if different < 0 else "\U0001F621"
+                current_price = updated_product.current_price
+                previous_price = updated_product.previous_price
+                link = updated_product.product_link
+                name = updated_product.name
 
-            notification_text = f"""{link}
+                different = current_price - previous_price
+                word = "снизилась" if different < 0 else "выросла" ""
+                emoji = "\U0001F601" if different < 0 else "\U0001F621"
+
+                notification_text = f"""{link}
     
 {emoji}{name}
     
-Цена {word} на {abs(different)}
-Предыдущая цена = {previous_price}
-Новая цена = {current_price}"""
+Цена {word} на {abs(different)} BYN
+Предыдущая цена = {previous_price} BYN
+Новая цена = {current_price} BYN"""
 
-            for chat_id in chat_ids:
-                await context.bot.send_message(chat_id=chat_id, text=notification_text)
+                for chat_id in chat_ids:
+                    await context.bot.send_message(chat_id=chat_id, text=notification_text)
 
-    logger.info("All notifications have been sent")
+        logger.info("All notifications have been sent")

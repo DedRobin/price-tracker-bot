@@ -39,7 +39,7 @@ add_user_handler = ConversationHandler(
             MessageHandler(filters.TEXT, check_admin_key),
         ]
     },
-    fallbacks=[CommandHandler("cancel", start)],
+    fallbacks=[CommandHandler("cancel", cancel)],
 )
 
 track_product_handler = ConversationHandler(
@@ -48,12 +48,12 @@ track_product_handler = ConversationHandler(
     ],
     states={
         STATES["TRACK"]: [
-            CommandHandler("skip_track", skip_track),
+            CommandHandler("cancel", cancel),
             MessageHandler(filters.TEXT, track_product),
         ]
     },
     fallbacks=[
-        CommandHandler("cancel", start),
+        CommandHandler("cancel", cancel),
     ],
 )
 
@@ -67,5 +67,5 @@ edit_product_handler = ConversationHandler(
             CallbackQueryHandler(remove_product, pattern=rf"^\d+\.{STATES['REMOVE']}$"),
         ]
     },
-    fallbacks=[CommandHandler("cancel", start)],
+    fallbacks=[CommandHandler("cancel", cancel)],
 )

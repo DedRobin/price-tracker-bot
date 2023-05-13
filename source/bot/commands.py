@@ -106,7 +106,7 @@ async def track_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     if data["chat_id"] in chat_ids:
         await context.bot.send_message(
             chat_id=data["chat_id"],
-            text="Вставьте URL-адрес товара для отслеживания\n/skip_track - пропустить",
+            text="Вставьте URL-адрес товара для отслеживания\n/cancel - отмена",
         )
     return STATES["TRACK"]
 
@@ -194,7 +194,7 @@ async def show_products(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
         await context.bot.send_message(
             chat_id=data["chat_id"],
             reply_markup=reply_markup,
-            text="Список отслеживаемых товаров",
+            text="Список отслеживаемых товаров\n/cancel - отмена",
         )
     return STATES["PRODUCT_LIST"]
 
@@ -266,6 +266,6 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
         )
     )
 
-    await update.message.reply_text("Вы закончили диалог")
+    await update.message.reply_text("Отмена")
 
     return ConversationHandler.END

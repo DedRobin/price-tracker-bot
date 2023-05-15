@@ -1,6 +1,6 @@
 venv
 .env
 .idea
-source/bot/__pycache__/
+__pycache__
 database.db
 test_bot

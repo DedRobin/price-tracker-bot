@@ -4,4 +4,5 @@ STATES = {
     "PRODUCT_LIST": 2,
     "REMOVE": 3,
     "ADD_USER": 4,
+    "DOWNLOAD_DB": 5,
 }

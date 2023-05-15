@@ -266,7 +266,24 @@ async def upload_db(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await context.bot.send_document(chat_id=chat_id, document="database.db", protect_content=True)
 
 
-async def download_db(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def ask_about_download(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int | None:
+    """Ask about DB loading"""
+
+    data = await get_data_from_update(update)
+    command = inspect.currentframe().f_code.co_name
+    logger.info(
+        "{0} {1} - {2} ({3}), chat ID={4} used command '/{5}'".format(
+            *data.values(), command
+        )
+    )
+    chat_ids = await get_chat_ids(is_admin=True)
+    if data["chat_id"] in chat_ids:
+        await context.bot.send_message(chat_id=data["chat_id"], text="Загрузите файл формата 'name.db'")
+
+        return STATES["DOWNLOAD_DB"]
+
+
+async def download_db(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Download database for administrators"""
 
     data = await get_data_from_update(update)
@@ -277,8 +294,8 @@ async def download_db(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
         )
     )
 
-    chat_ids = await get_chat_ids(is_admin=True)
-    if data["chat_id"] in chat_ids:
-        file = await update.effective_message.document.get_file()
-        await file.download_to_drive("database.db")
-        await context.bot.send_message(chat_id=data["chat_id"], text="База данных загружена")
+    file = await update.effective_message.document.get_file()
+    await file.download_to_drive("database.db")
+    await update.message.reply_text("База данных загружена")
+
+    return ConversationHandler.END

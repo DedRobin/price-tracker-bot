@@ -22,6 +22,7 @@ from source.bot.commands import (
     track_product,
     upload_db,
     download_db,
+    ask_about_download,
 )
 from source.bot.states import STATES
 
@@ -73,4 +74,14 @@ edit_product_handler = ConversationHandler(
 )
 
 upload_db_handler = CommandHandler("upload_db", upload_db)
-download_db_handler = TypeHandler(filters.Update, download_db)
+download_db_handler = ConversationHandler(
+    entry_points=[
+        CommandHandler("download_db", ask_about_download)
+    ],
+    states={
+        STATES["DOWNLOAD_DB"]: [
+            TypeHandler(filters.Update, download_db),
+        ]
+    },
+    fallbacks=[CommandHandler("cancel", cancel)],
+)

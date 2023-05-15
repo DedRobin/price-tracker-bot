@@ -111,19 +111,6 @@ async def track_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     return STATES["TRACK"]
 
 
-async def skip_track(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    data = await get_data_from_update(update)
-    command = inspect.currentframe().f_code.co_name
-    logger.info(
-        "{0} {1} - {2} ({3}), chat ID={4} used command '/{5}'".format(
-            *data.values(), command
-        )
-    )
-
-    await update.message.reply_text("Вы отменили действие")
-    return ConversationHandler.END
-
-
 async def track_product(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     data = await get_data_from_update(update)
     command = inspect.currentframe().f_code.co_name
@@ -269,3 +256,11 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     await update.message.reply_text("Отмена")
 
     return ConversationHandler.END
+
+
+async def upload_db(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Received database for admin"""
+
+    chat_ids = await get_chat_ids(is_admin=True)
+    for chat_id in chat_ids:
+        await context.bot.send_document(chat_id=chat_id, document="database.db", protect_content=True)

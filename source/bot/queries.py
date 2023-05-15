@@ -10,12 +10,16 @@ from source.store.database.tools import create_session
 logger = enable_logger(__name__)
 
 
-async def select_users() -> list[User]:
+async def select_users(is_admin: bool = False) -> list[User]:
     """Get all products for a special user"""
 
     async_session = await create_session()
     async with async_session() as session:
         query = select(User)
+
+        if is_admin:
+            query = query.where(User.is_admin == is_admin)
+
         users = await session.scalars(query)
         users = users.all()
         return users
@@ -134,7 +138,7 @@ async def get_product(product_id: int):
 
 
 async def update_product(
-    product: Product, price: float = None, name: str = None
+        product: Product, price: float = None, name: str = None
 ) -> Product:
     """Update a specific product"""
 

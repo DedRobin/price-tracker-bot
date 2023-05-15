@@ -16,10 +16,10 @@ from source.bot.commands import (
     get_product_actions,
     remove_product,
     show_products,
-    skip_track,
     start,
     track_menu,
     track_product,
+    upload_db
 )
 from source.bot.states import STATES
 
@@ -69,3 +69,5 @@ edit_product_handler = ConversationHandler(
     },
     fallbacks=[CommandHandler("cancel", cancel)],
 )
+
+download_db_handler = CommandHandler("upload_db", upload_db)

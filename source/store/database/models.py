@@ -25,6 +25,7 @@ class User(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     username: Mapped[str] = mapped_column(unique=True, nullable=True)
     chat_id: Mapped[int] = mapped_column(unique=True, nullable=True)
+    is_admin: Mapped[bool] = mapped_column(default=False)
 
     # Relations
     products: Mapped[List[Product]] = relationship(

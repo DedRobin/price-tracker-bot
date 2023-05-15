@@ -25,12 +25,12 @@ async def select_users(is_admin: bool = False) -> list[User]:
         return users
 
 
-async def insert_user(username: str, chat_id: int) -> None:
+async def insert_user(username: str, chat_id: int, is_admin: bool = False) -> None:
     """Add a new user"""
 
     async_session = await create_session()
     async with async_session() as session:
-        user = User(username=username, chat_id=chat_id)
+        user = User(username=username, chat_id=chat_id, is_admin=is_admin)
         session.add(user)
         await session.commit()
 

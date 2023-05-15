@@ -33,8 +33,11 @@ async def get_data_from_update(update: Update) -> dict:
 
 
 async def post_user(admin_key: str, username: str, chat_id: int) -> int:
-    if admin_key == os.environ.get("ADMIN_KEY"):
+    if admin_key == os.environ.get("USER_KEY"):
         await insert_user(username=username, chat_id=chat_id)
+        return True
+    elif admin_key == os.environ.get("ADMIN_KEY"):
+        await insert_user(username=username, chat_id=chat_id, is_admin=True)
         return True
     return False
 

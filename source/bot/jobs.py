@@ -37,9 +37,9 @@ async def send_notifications(context: ContextTypes.DEFAULT_TYPE):
                     word = "снизилась" if different < 0 else "выросла"
                     emoji = "\U0001F601" if different < 0 else "\U0001F621"
 
-                    notification_text = f"""{link}
-    
-{emoji}{name}
+                    notification_text = f"""{emoji}{name}
+                    
+{link}  
     
 Цена {word} на {abs(different)} BYN
 Предыдущая цена = {previous_price} BYN

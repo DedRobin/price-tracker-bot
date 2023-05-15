@@ -5,6 +5,7 @@ from telegram.ext import (
     CommandHandler,
     ConversationHandler,
     MessageHandler,
+    TypeHandler,
     filters,
 )
 from telegram.warnings import PTBUserWarning
@@ -19,7 +20,8 @@ from source.bot.commands import (
     start,
     track_menu,
     track_product,
-    upload_db
+    upload_db,
+    download_db,
 )
 from source.bot.states import STATES
 
@@ -70,4 +72,5 @@ edit_product_handler = ConversationHandler(
     fallbacks=[CommandHandler("cancel", cancel)],
 )
 
-download_db_handler = CommandHandler("upload_db", upload_db)
+upload_db_handler = CommandHandler("upload_db", upload_db)
+download_db_handler = TypeHandler(filters.Update, download_db)

@@ -10,6 +10,7 @@ from source.bot.handlers import (
     edit_product_handler,
     start_handler,
     track_product_handler,
+    upload_db_handler,
     download_db_handler,
 )
 from source.bot.jobs import send_notifications
@@ -34,6 +35,7 @@ async def main():
     application.add_handler(track_product_handler)
     application.add_handler(edit_product_handler)
     application.add_handler(add_user_handler)
+    application.add_handler(upload_db_handler)
     application.add_handler(download_db_handler)
 
     job_queue = application.job_queue

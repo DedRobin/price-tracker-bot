@@ -1,5 +1,5 @@
 import inspect
-
+import pathlib
 from aiohttp import ClientSession
 from telegram import (
     InlineKeyboardButton,
@@ -259,8 +259,26 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
 
 
 async def upload_db(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Received database for admin"""
+    """Upload database for administrators"""
 
     chat_ids = await get_chat_ids(is_admin=True)
     for chat_id in chat_ids:
         await context.bot.send_document(chat_id=chat_id, document="database.db", protect_content=True)
+
+
+async def download_db(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Download database for administrators"""
+
+    data = await get_data_from_update(update)
+    command = inspect.currentframe().f_code.co_name
+    logger.info(
+        "{0} {1} - {2} ({3}), chat ID={4} used command '/{5}'".format(
+            *data.values(), command
+        )
+    )
+
+    chat_ids = await get_chat_ids(is_admin=True)
+    if data["chat_id"] in chat_ids:
+        file = await update.effective_message.document.get_file()
+        await file.download_to_drive("database.db")
+        await context.bot.send_message(chat_id=data["chat_id"], text="База данных загружена")

@@ -274,7 +274,7 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
             *data.values(), command
         )
     )
-
+    context.user_data.clear()
     # Back to the starting point
     await start(update, context)
 

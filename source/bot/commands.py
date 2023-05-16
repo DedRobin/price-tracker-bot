@@ -179,28 +179,27 @@ async def show_products(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
             *data.values(), command
         )
     )
+    query = update.callback_query
+    await query.answer()
 
-    chat_ids = await get_chat_ids()
-
-    if data["chat_id"] in chat_ids:
-        products = await get_user_products(username=data["username"])
-        context.user_data["products"] = {
-            f"id={callback_index}": product for callback_index, product in enumerate(products)
-        }
-        keyboard = [
-            [
-                InlineKeyboardButton(
-                    text=product.get("name"), callback_data=str(callback_index)
-                )
-            ]
-            for callback_index, product in context.user_data["products"].items()
+    products = await get_user_products(username=data["username"])
+    context.user_data["products"] = {
+        f"id={callback_index}": product for callback_index, product in enumerate(products)
+    }
+    keyboard = [
+        [
+            InlineKeyboardButton(
+                text=product.get("name"), callback_data=str(callback_index)
+            )
         ]
-        reply_markup = InlineKeyboardMarkup(keyboard)
-        await context.bot.send_message(
-            chat_id=data["chat_id"],
-            reply_markup=reply_markup,
-            text="Список отслеживаемых товаров\n/cancel - отмена",
-        )
+        for callback_index, product in context.user_data["products"].items()
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+
+    text = "Список отслеживаемых товаров\n/cancel - отмена"
+
+    await query.edit_message_text(text=text, reply_markup=reply_markup)
+
     return STATES["PRODUCT_LIST"]
 
 

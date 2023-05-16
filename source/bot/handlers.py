@@ -23,6 +23,7 @@ from source.bot.commands import (
     upload_db,
     download_db,
     ask_about_download,
+    stop,
 )
 from source.bot.states import STATES
 
@@ -30,9 +31,9 @@ filterwarnings(
     action="ignore", message=r".*CallbackQueryHandler", category=PTBUserWarning
 )
 
-# HANDLERS
-start_handler = CommandHandler("start", start)
-add_user_handler = ConversationHandler(
+# Handlers
+# start_handler = CommandHandler("start", start)
+add_user_handler = ConversationHandler(  # !!!
     entry_points=[
         CommandHandler("add_user", add_user),
     ],
@@ -47,7 +48,7 @@ add_user_handler = ConversationHandler(
 
 track_product_handler = ConversationHandler(
     entry_points=[
-        MessageHandler(filters.Regex(r"^Добавить товар для отслеживания$"), track_menu)
+        CallbackQueryHandler(track_menu, pattern=rf"^{STATES['TRACK_PRODUCT_CONV']}$")
     ],
     states={
         STATES["TRACK"]: [
@@ -62,19 +63,19 @@ track_product_handler = ConversationHandler(
 
 edit_product_handler = ConversationHandler(
     entry_points=[
-        MessageHandler(filters.Regex(r"^Показать отслеживаемые товары$"), show_products)
+        CallbackQueryHandler(show_products, pattern=rf"^{STATES['EDIT_TRACK_PRODUCTS_CONV']}$")
     ],
     states={
         STATES["PRODUCT_LIST"]: [
-            CallbackQueryHandler(get_product_actions, pattern=r"^\d+$"),
-            CallbackQueryHandler(remove_product, pattern=rf"^\d+\.{STATES['REMOVE']}$"),
+            CallbackQueryHandler(get_product_actions, pattern=r"^id=\d+$"),
+            CallbackQueryHandler(remove_product, pattern=rf"^id=\d+\|{STATES['REMOVE']}$"),
         ]
     },
     fallbacks=[CommandHandler("cancel", cancel)],
 )
 
-upload_db_handler = CommandHandler("upload_db", upload_db)
-download_db_handler = ConversationHandler(
+upload_db_handler = CommandHandler("upload_db", upload_db)  # !!!
+download_db_handler = ConversationHandler(  # !!!
     entry_points=[
         CommandHandler("download_db", ask_about_download)
     ],
@@ -84,4 +85,19 @@ download_db_handler = ConversationHandler(
         ]
     },
     fallbacks=[CommandHandler("cancel", cancel)],
+)
+
+main_conversation_handler = ConversationHandler(
+    entry_points=[
+        CommandHandler("start", start),
+    ],
+    states={
+        STATES["MENU"]: [
+            track_product_handler,
+            edit_product_handler,
+        ],
+    },
+    fallbacks=[
+        CommandHandler("stop", stop),
+    ]
 )

@@ -26,8 +26,14 @@ from source.settings import enable_logger
 
 logger = enable_logger(__name__)
 
+# Callback points
+TRACK_PRODUCT_CONV, EDIT_TRACK_PRODUCTS_CONV = range(2)
+TRACK_PRODUCT = 2
+PRODUCT_LIST, REMOVE_PRODUCT = range(3, 5)
+ADD_USER, DOWNLOAD_DB = range(5, 7)
 
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     data = await get_data_from_update(update)
     command = inspect.currentframe().f_code.co_name
     logger.info(
@@ -35,22 +41,24 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             *data.values(), command
         )
     )
-
-    reply_markup = ReplyKeyboardMarkup(
+    keyboard = [
         [
-            ["Добавить товар для отслеживания", "Показать отслеживаемые товары"],
-            # ["Действие 3 в разработке", "Действие 4 в разработке"],
-        ],
-        one_time_keyboard=True,
-    )
+            InlineKeyboardButton(text="Добавить товар", callback_data=str(STATES["TRACK_PRODUCT_CONV"])),
+            InlineKeyboardButton(text="Список товаров", callback_data=str(STATES["EDIT_TRACK_PRODUCTS_CONV"])),
+        ]
+    ]
+
+    reply_markup = InlineKeyboardMarkup(keyboard)
+
     chat_ids = await get_chat_ids()
 
     if data["chat_id"] in chat_ids:
         await context.bot.send_message(
             chat_id=data["chat_id"],
             reply_markup=reply_markup,
-            text="Выберите действие.",
+            text="Действия:",
         )
+    return STATES["MENU"]
 
 
 async def add_user(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -100,14 +108,14 @@ async def track_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
             *data.values(), command
         )
     )
+    text = "Вставьте URL-адрес товара для отслеживания\n/cancel - отмена"
 
-    chat_ids = await get_chat_ids()
-
-    if data["chat_id"] in chat_ids:
-        await context.bot.send_message(
-            chat_id=data["chat_id"],
-            text="Вставьте URL-адрес товара для отслеживания\n/cancel - отмена",
-        )
+    if context.user_data.get("call_again"):
+        await update.message.reply_text(text=text)
+    else:
+        query = update.callback_query
+        await query.answer()
+        await query.edit_message_text(text=text)
     return STATES["TRACK"]
 
 
@@ -120,37 +128,47 @@ async def track_product(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
         )
     )
 
-    chat_ids = await get_chat_ids()
+    message = update.message
+    link = message.text
 
-    if data["chat_id"] in chat_ids:
-        link = update.message.text
-        link_is_correct = await check_link(link=link)
-        if not link_is_correct:
-            await context.bot.send_message(
-                chat_id=data["chat_id"],
-                text="Ваша ссылка некорректная\nВставьте URL-адрес товара для отслеживания\n/skip_track - пропустить",
-            )
-            return STATES["TRACK"]
-        # !!!
-        product_is_existed = await check_product_in_db(
-            username=data["username"], link=link
+    link_is_correct = await check_link(link=link)
+    if not link_is_correct:
+        text = "Ваша ссылка некорректная"
+        await message.reply_text(text=text)
+        context.user_data["call_again"] = True
+        await track_menu(update, context)
+        return STATES["TRACK"]
+
+    product_is_existed = await check_product_in_db(
+        username=data["username"], link=link
+    )
+    if product_is_existed:
+        text = "Такая ссылка уже отслеживается"
+        await message.reply_text(text=text)
+        context.user_data["call_again"] = True
+        await track_menu(update, context)
+        return STATES["TRACK"]
+    else:
+        async with ClientSession() as session:
+            name, price = await onliner.parse(session=session, url=link)
+
+        is_added = await add_product(
+            username=data["username"], link=link, name=name, price=price
         )
-        if product_is_existed:
-            text = "Такая ссылка уже отслеживается"
+        if is_added:
+            text = "Товар был добавлен для отслеживается"
         else:
-            async with ClientSession() as session:
-                name, price = await onliner.parse(session=session, url=link)
+            text = "Не удалось добавить товар"
 
-                is_added = await add_product(
-                    username=data["username"], link=link, name=name, price=price
-                )
-                if is_added:
-                    text = "Товар был добавлен для отслеживается"
-                else:
-                    text = "Не удалось добавить товар"
+    # await context.bot.send_message(chat_id=data["chat_id"], text=text)
+    await message.reply_text(text=text)
 
-        await context.bot.send_message(chat_id=data["chat_id"], text=text)
-        return ConversationHandler.END
+    # Back to the starting point
+    await start(update, context)
+
+    context.user_data.clear()
+
+    return ConversationHandler.END
 
 
 async def show_products(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -167,7 +185,7 @@ async def show_products(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     if data["chat_id"] in chat_ids:
         products = await get_user_products(username=data["username"])
         context.user_data["products"] = {
-            callback_index: product for callback_index, product in enumerate(products)
+            f"id={callback_index}": product for callback_index, product in enumerate(products)
         }
         keyboard = [
             [
@@ -198,27 +216,25 @@ async def get_product_actions(
     )
 
     query = update.callback_query
-    callback_index = int(query.data)
+    callback_index = query.data
     product = context.user_data["products"][callback_index]
     product_id = product["id"]
 
     keyboard = [
         [
             InlineKeyboardButton(
-                text="Удалить", callback_data=f"{product_id}.{STATES['REMOVE']}"
+                text="Удалить", callback_data=f"id={product_id}|{STATES['REMOVE']}"
             ),
         ],
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     await query.answer()
     await query.edit_message_text(
-        text=f"Выбран товар:\n{product['name']}\n/cancel - отмена действия"
-    )
-    await context.bot.send_message(
-        chat_id=update.effective_chat.id,
         reply_markup=reply_markup,
-        text="Действия:",
+        text=f"Выбран товар:\n{product['name']}\n/cancel - отмена действия",
+
     )
+
     return STATES["PRODUCT_LIST"]
 
 
@@ -234,12 +250,19 @@ async def remove_product(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     query = update.callback_query
     await query.answer()
 
-    product_id = int(query.data.split(".")[0])
+    product_id = query.data.split("|")[0]  # "id={product_id}|{REMOVE}" -> "id={product_id}"
+    product_id = int(product_id[3:])  # "id={product_id}" -> "{product_id}"
 
     await untrack_product(username=data["username"], product_id=product_id)
     await check_relationship(product_id=product_id)
 
-    await context.bot.send_message(chat_id=data["chat_id"], text="Товар удален")
+    await query.edit_message_text(text="Товар удален")
+
+    # Clear user_data
+    context.user_data.clear()
+
+    # Back to the starting point
+    await start(update, context)
 
     return ConversationHandler.END
 
@@ -253,7 +276,8 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
         )
     )
 
-    await update.message.reply_text("Отмена")
+    # Back to the starting point
+    await start(update, context)
 
     return ConversationHandler.END
 
@@ -298,4 +322,18 @@ async def download_db(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int
     await file.download_to_drive("database.db")
     await update.message.reply_text("База данных загружена")
 
+    return ConversationHandler.END
+
+
+async def stop(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    data = await get_data_from_update(update)
+    command = inspect.currentframe().f_code.co_name
+    logger.info(
+        "{0} {1} - {2} ({3}), chat ID={4} used command '/{5}'".format(
+            *data.values(), command
+        )
+    )
+    await update.message.reply_text("Бот остановлен")
+
+    context.user_data.clear()
     return ConversationHandler.END

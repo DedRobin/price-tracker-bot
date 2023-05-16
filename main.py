@@ -8,7 +8,8 @@ from source.bot.custom_entities import CustomContext
 from source.bot.handlers import (
     add_user_handler,
     edit_product_handler,
-    start_handler,
+    # start_handler,
+    main_conversation_handler,
     track_product_handler,
     upload_db_handler,
     download_db_handler,
@@ -31,15 +32,15 @@ async def main():
 
     application = ApplicationBuilder().token(token).context_types(context_types).build()
 
-    application.add_handler(start_handler)
-    application.add_handler(track_product_handler)
-    application.add_handler(edit_product_handler)
+    application.add_handler(main_conversation_handler)
+    # application.add_handler(track_product_handler)
+    # application.add_handler(edit_product_handler)
     application.add_handler(add_user_handler)
     application.add_handler(upload_db_handler)
     application.add_handler(download_db_handler)
 
     job_queue = application.job_queue
-    job_queue.run_repeating(send_notifications, interval=1000, first=1)
+    job_queue.run_repeating(send_notifications, interval=3600, first=1)
 
     await application.bot.set_webhook(url=f"{webhook_url}/telegram")
 

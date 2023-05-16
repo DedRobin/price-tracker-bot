@@ -1,8 +1,10 @@
-STATES = {
-    "TRACK": 0,
-    "BACK": 1,
-    "PRODUCT_LIST": 2,
-    "REMOVE": 3,
-    "ADD_USER": 4,
-    "DOWNLOAD_DB": 5,
-}
+list_of_states = [
+    "MENU",
+    "TRACK_PRODUCT_CONV", "EDIT_TRACK_PRODUCTS_CONV",
+    "TRACK", "BACK", "PRODUCT_LIST",
+    "ADD_USER", "DOWNLOAD_DB",
+    "REMOVE",
+]
+
+STATES = {key: value for value, key in enumerate(list_of_states)}
+# print("Done")

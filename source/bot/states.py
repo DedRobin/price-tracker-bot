@@ -1,7 +1,7 @@
 list_of_states = [
     "MENU",
     "TRACK_PRODUCT_CONV", "EDIT_TRACK_PRODUCTS_CONV",
-    "TRACK", "BACK", "PRODUCT_LIST",
+    "TRACK", "PRODUCT_LIST",
     "ADD_USER", "DOWNLOAD_DB",
     "REMOVE",
 ]

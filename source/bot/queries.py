@@ -138,7 +138,7 @@ async def get_product(product_id: int):
 
 
 async def update_product(
-        product: Product, price: float = None, name: str = None
+    product: Product, price: float = None, name: str = None
 ) -> Product:
     """Update a specific product"""
 

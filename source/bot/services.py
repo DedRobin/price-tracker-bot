@@ -43,7 +43,7 @@ async def post_user(admin_key: str, username: str, chat_id: int) -> int:
 
 
 async def get_chat_ids(is_admin: bool = False) -> list:
-    """Get all chat IDs by some """
+    """Get all chat IDs by some"""
 
     users = await select_users(
         is_admin=is_admin,

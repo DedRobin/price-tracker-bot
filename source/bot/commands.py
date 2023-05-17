@@ -1,12 +1,7 @@
 import inspect
-import pathlib
+
 from aiohttp import ClientSession
-from telegram import (
-    InlineKeyboardButton,
-    InlineKeyboardMarkup,
-    ReplyKeyboardMarkup,
-    Update,
-)
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import ContextTypes, ConversationHandler
 
 from source.bot.services import (
@@ -43,8 +38,13 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     )
     keyboard = [
         [
-            InlineKeyboardButton(text="Добавить товар", callback_data=str(STATES["TRACK_PRODUCT_CONV"])),
-            InlineKeyboardButton(text="Список товаров", callback_data=str(STATES["EDIT_TRACK_PRODUCTS_CONV"])),
+            InlineKeyboardButton(
+                text="Добавить товар", callback_data=str(STATES["TRACK_PRODUCT_CONV"])
+            ),
+            InlineKeyboardButton(
+                text="Список товаров",
+                callback_data=str(STATES["EDIT_TRACK_PRODUCTS_CONV"]),
+            ),
         ]
     ]
 
@@ -61,7 +61,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
                 text=text,
                 message_id=context.user_data["message_id"],
                 chat_id=data["chat_id"],
-                reply_markup=reply_markup
+                reply_markup=reply_markup,
             )
         else:
             await context.bot.send_message(
@@ -94,7 +94,7 @@ async def add_user(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await context.bot.send_message(
         chat_id=data["chat_id"],
         text="Введите секретный ключ",
-        reply_markup=reply_markup
+        reply_markup=reply_markup,
     )
     return STATES["ADD_USER"]
 
@@ -132,13 +132,7 @@ async def track_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
         )
     )
     text = "Вставьте URL-адрес товара для отслеживания"
-    keyboard = [
-        [
-            InlineKeyboardButton(
-                text="Назад", callback_data=str(STATES["BACK"])
-            )
-        ]
-    ]
+    keyboard = [[InlineKeyboardButton(text="Назад", callback_data=str(STATES["BACK"]))]]
     reply_markup = InlineKeyboardMarkup(keyboard)
 
     if context.user_data.get("call_again"):
@@ -147,7 +141,7 @@ async def track_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
             text=text,
             message_id=context.user_data["message_id"],
             chat_id=data["chat_id"],
-            reply_markup=reply_markup
+            reply_markup=reply_markup,
         )
     else:
         query = update.callback_query
@@ -222,7 +216,8 @@ async def show_products(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
 
     products = await get_user_products(username=data["username"])
     context.user_data["products"] = {
-        f"id={callback_index}": product for callback_index, product in enumerate(products)
+        f"id={callback_index}": product
+        for callback_index, product in enumerate(products)
     }
     keyboard = [
         [
@@ -233,9 +228,7 @@ async def show_products(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
         for callback_index, product in context.user_data["products"].items()
     ]
     keyboard.append(
-        [
-            InlineKeyboardButton(text="Назад", callback_data=str(STATES["BACK"]))
-        ]
+        [InlineKeyboardButton(text="Назад", callback_data=str(STATES["BACK"]))]
     )
 
     reply_markup = InlineKeyboardMarkup(keyboard)
@@ -248,7 +241,7 @@ async def show_products(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
 
 
 async def get_product_actions(
-        update: Update, context: ContextTypes.DEFAULT_TYPE
+    update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> int:
     data = await get_data_from_update(update)
     command = inspect.currentframe().f_code.co_name
@@ -270,9 +263,7 @@ async def get_product_actions(
             ),
         ],
         [
-            InlineKeyboardButton(
-                text="Назад", callback_data=f"{STATES['BACK']}"
-            ),
+            InlineKeyboardButton(text="Назад", callback_data=f"{STATES['BACK']}"),
         ],
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
@@ -280,7 +271,6 @@ async def get_product_actions(
     await query.edit_message_text(
         reply_markup=reply_markup,
         text=f"Выбран товар:\n{product['name']}",
-
     )
 
     return STATES["PRODUCT_LIST"]
@@ -298,7 +288,9 @@ async def remove_product(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     query = update.callback_query
     await query.answer()
 
-    product_id = query.data.split("|")[0]  # "id={product_id}|{REMOVE}" -> "id={product_id}"
+    product_id = query.data.split("|")[
+        0
+    ]  # "id={product_id}|{REMOVE}" -> "id={product_id}"
     product_id = int(product_id[3:])  # "id={product_id}" -> "{product_id}"
 
     await untrack_product(username=data["username"], product_id=product_id)
@@ -320,10 +312,14 @@ async def upload_db(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     chat_ids = await get_chat_ids(is_admin=True)
     for chat_id in chat_ids:
-        await context.bot.send_document(chat_id=chat_id, document="database.db", protect_content=True)
+        await context.bot.send_document(
+            chat_id=chat_id, document="database.db", protect_content=True
+        )
 
 
-async def ask_about_download(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int | None:
+async def ask_about_download(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> int | None:
     """Ask about DB loading"""
 
     data = await get_data_from_update(update)
@@ -335,7 +331,9 @@ async def ask_about_download(update: Update, context: ContextTypes.DEFAULT_TYPE)
     )
     chat_ids = await get_chat_ids(is_admin=True)
     if data["chat_id"] in chat_ids:
-        await context.bot.send_message(chat_id=data["chat_id"], text="Загрузите файл формата 'name.db'")
+        await context.bot.send_message(
+            chat_id=data["chat_id"], text="Загрузите файл формата 'name.db'"
+        )
 
         return STATES["DOWNLOAD_DB"]
 

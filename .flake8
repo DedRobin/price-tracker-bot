@@ -5,6 +5,7 @@ exclude =
     .venv,
     venv,
     .pytest_cache,
-    __pycache__
+    __pycache__,
+    test_bot
 max-line-length = 120
 max-complexity = 14

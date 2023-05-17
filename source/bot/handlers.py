@@ -12,7 +12,7 @@ from telegram.warnings import PTBUserWarning
 
 from source.bot.commands import (
     add_user,
-    cancel,
+    back,
     check_admin_key,
     get_product_actions,
     remove_product,
@@ -23,7 +23,7 @@ from source.bot.commands import (
     upload_db,
     download_db,
     ask_about_download,
-    stop,
+    stop, cancel_add_user,
 )
 from source.bot.states import STATES
 
@@ -39,11 +39,11 @@ add_user_handler = ConversationHandler(  # !!!
     ],
     states={
         STATES["ADD_USER"]: [
-            CommandHandler("cancel", cancel),
+            CommandHandler("back", back),
             MessageHandler(filters.TEXT, check_admin_key),
         ]
     },
-    fallbacks=[CommandHandler("cancel", cancel)],
+    fallbacks=[CallbackQueryHandler(cancel_add_user, pattern=rf"^{STATES['CANCEL_ADD_USER']}$")],
 )
 
 track_product_handler = ConversationHandler(
@@ -52,13 +52,12 @@ track_product_handler = ConversationHandler(
     ],
     states={
         STATES["TRACK"]: [
-            CommandHandler("cancel", cancel),
             MessageHandler(filters.TEXT, track_product),
         ]
     },
     fallbacks=[
-        CommandHandler("cancel", cancel),
-    ],
+        CallbackQueryHandler(back, pattern=rf"^{STATES['BACK']}$"),
+    ]
 )
 
 edit_product_handler = ConversationHandler(
@@ -71,11 +70,13 @@ edit_product_handler = ConversationHandler(
             CallbackQueryHandler(remove_product, pattern=rf"^id=\d+\|{STATES['REMOVE']}$"),
         ]
     },
-    fallbacks=[CommandHandler("cancel", cancel)],
+    fallbacks=[
+        CallbackQueryHandler(back, pattern=rf"^{STATES['BACK']}$"),
+    ]
 )
 
-upload_db_handler = CommandHandler("upload_db", upload_db)  # !!!
-download_db_handler = ConversationHandler(  # !!!
+upload_db_handler = CommandHandler("upload_db", upload_db)
+download_db_handler = ConversationHandler(
     entry_points=[
         CommandHandler("download_db", ask_about_download)
     ],
@@ -84,7 +85,9 @@ download_db_handler = ConversationHandler(  # !!!
             TypeHandler(filters.Update, download_db),
         ]
     },
-    fallbacks=[CommandHandler("cancel", cancel)],
+    fallbacks=[
+        CallbackQueryHandler(back, pattern=rf"^{STATES['BACK']}$"),
+    ]
 )
 
 main_conversation_handler = ConversationHandler(
@@ -98,6 +101,5 @@ main_conversation_handler = ConversationHandler(
         ],
     },
     fallbacks=[
-        CommandHandler("stop", stop),
-    ]
+        CommandHandler("stop", stop)]
 )

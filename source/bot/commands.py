@@ -18,6 +18,7 @@ from source.bot.services import (
 from source.bot.states import STATES
 from source.parsers import onliner
 from source.settings import enable_logger
+from source.bot.settings import TIMEOUT_CONV
 
 logger = enable_logger(__name__)
 
@@ -341,7 +342,7 @@ async def ask_about_download(
     )
     chat_ids = await get_chat_ids(is_admin=True)
     if data["chat_id"] in chat_ids:
-        await context.bot.send_message(
+        message = await context.bot.send_message(
             chat_id=data["chat_id"], text="Загрузите файл формата 'db_name.db'"
         )
 
@@ -361,6 +362,7 @@ async def download_db(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int
 
     file = await update.effective_message.document.get_file()
     await file.download_to_drive("database.db")
+    await update.message.delete()
     await update.message.reply_text("База данных загружена")
 
     return ConversationHandler.END
@@ -422,7 +424,7 @@ async def get_help(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             *data.values(), command
         )
     )
-    text = """Чтобы запустить бота введите команду /start.
-После этого ваш диалог с ботом будет активен 30 секунд.
+    text = f"""Чтобы запустить бота введите команду /start.
+После этого ваш диалог с ботом будет активен {TIMEOUT_CONV} секунд.
 Если бот перестал реагировать на нажатие кнопок или не отвечает на сообщения,то снова введите команду /start"""
     await update.message.reply_text(text=text)

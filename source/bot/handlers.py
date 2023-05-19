@@ -20,8 +20,7 @@ from source.bot.commands import (
 )
 
 from source.bot.states import STATES
-
-TIMEOUT_CONV = 10
+from source.bot.settings import TIMEOUT_CONV
 
 filterwarnings(
     action="ignore", message=r".*CallbackQueryHandler", category=PTBUserWarning

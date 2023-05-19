@@ -13,7 +13,7 @@ list_of_states = [
     # Actions for special product
     "REMOVE",
     # Common actions
-    "BACK",
+    "BACK"
 ]
 
 STATES = {key: value for value, key in enumerate(list_of_states)}

@@ -2,7 +2,6 @@ from warnings import filterwarnings
 
 from telegram.ext import CallbackQueryHandler, CommandHandler, ConversationHandler, MessageHandler, TypeHandler, filters
 from telegram.warnings import PTBUserWarning
-
 from source.bot.commands import (
     add_user,
     ask_about_download,
@@ -17,23 +16,25 @@ from source.bot.commands import (
     stop,
     track_menu,
     track_product,
-    upload_db,
+    upload_db, get_help,
 )
+
 from source.bot.states import STATES
+
+TIMEOUT_CONV = 10
 
 filterwarnings(
     action="ignore", message=r".*CallbackQueryHandler", category=PTBUserWarning
 )
 
 # Handlers
-# start_handler = CommandHandler("start", start)
-add_user_handler = ConversationHandler(  # !!!
+add_user_handler = ConversationHandler(
+    conversation_timeout=TIMEOUT_CONV,
     entry_points=[
         CommandHandler("add_user", add_user),
     ],
     states={
         STATES["ADD_USER"]: [
-            CommandHandler("back", back),
             MessageHandler(filters.TEXT, check_admin_key),
         ]
     },
@@ -42,44 +43,15 @@ add_user_handler = ConversationHandler(  # !!!
     ],
 )
 
-track_product_handler = ConversationHandler(
-    entry_points=[
-        CallbackQueryHandler(track_menu, pattern=rf"^{STATES['TRACK_PRODUCT_CONV']}$")
-    ],
-    states={
-        STATES["TRACK"]: [
-            MessageHandler(filters.TEXT, track_product),
-        ]
-    },
-    fallbacks=[
-        CallbackQueryHandler(back, pattern=rf"^{STATES['BACK']}$"),
-    ],
-)
-
-edit_product_handler = ConversationHandler(
-    entry_points=[
-        CallbackQueryHandler(
-            show_products, pattern=rf"^{STATES['EDIT_TRACK_PRODUCTS_CONV']}$"
-        )
-    ],
-    states={
-        STATES["PRODUCT_LIST"]: [
-            CallbackQueryHandler(get_product_actions, pattern=r"^id=\d+$"),
-            CallbackQueryHandler(
-                remove_product, pattern=rf"^id=\d+\|{STATES['REMOVE']}$"
-            ),
-        ]
-    },
-    fallbacks=[
-        CallbackQueryHandler(back, pattern=rf"^{STATES['BACK']}$"),
-    ],
-)
+help_handler = CommandHandler("help", get_help)
 
 upload_db_handler = CommandHandler("upload_db", upload_db)
 download_db_handler = ConversationHandler(
+    conversation_timeout=TIMEOUT_CONV,
     entry_points=[CommandHandler("download_db", ask_about_download)],
     states={
         STATES["DOWNLOAD_DB"]: [
+            CommandHandler("stop", stop),
             TypeHandler(filters.Update, download_db),
         ]
     },
@@ -88,7 +60,45 @@ download_db_handler = ConversationHandler(
     ],
 )
 
+track_product_handler = ConversationHandler(
+    conversation_timeout=TIMEOUT_CONV,
+    entry_points=[
+        CallbackQueryHandler(track_menu, pattern=rf"^{STATES['TRACK_PRODUCT_CONV']}$")
+    ],
+    states={
+        STATES["TRACK"]: [
+            MessageHandler(filters.TEXT & ~filters.COMMAND, track_product),
+        ]
+    },
+    fallbacks=[
+        CallbackQueryHandler(back, pattern=rf"^{STATES['BACK']}$"),
+        CommandHandler("start", start),
+    ],
+)
+
+edit_product_handler = ConversationHandler(
+    conversation_timeout=TIMEOUT_CONV,
+    entry_points=[
+        CallbackQueryHandler(
+            show_products, pattern=rf"^{STATES['EDIT_TRACK_PRODUCTS_CONV']}$"
+        )
+    ],
+    states={
+        STATES["PRODUCT_LIST"]: [
+            CallbackQueryHandler(
+                get_product_actions, pattern=r"^id=\d+$"),
+            CallbackQueryHandler(
+                remove_product, pattern=rf"^id=\d+\|{STATES['REMOVE']}$"
+            ),
+        ],
+    },
+    fallbacks=[
+        CallbackQueryHandler(back, pattern=rf"^{STATES['BACK']}$")
+    ]
+)
+
 main_conversation_handler = ConversationHandler(
+    conversation_timeout=TIMEOUT_CONV,
     entry_points=[
         CommandHandler("start", start),
     ],
@@ -98,5 +108,7 @@ main_conversation_handler = ConversationHandler(
             edit_product_handler,
         ],
     },
-    fallbacks=[CommandHandler("stop", stop)],
+    fallbacks=[
+        CommandHandler("stop", stop),
+    ],
 )

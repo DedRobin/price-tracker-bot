@@ -5,7 +5,7 @@ import uvicorn
 from telegram.ext import ApplicationBuilder, ContextTypes
 
 from source.bot.custom_entities import CustomContext
-from source.bot.handlers import add_user_handler, download_db_handler, main_conversation_handler, upload_db_handler
+from source.bot.handlers import add_user_handler, download_db_handler, upload_db_handler, main_conversation_handler, help_handler
 from source.bot.jobs import send_notifications
 from source.settings import enable_logger
 from source.webserver.tools import create_app
@@ -27,6 +27,7 @@ async def main():
 
     # Handlers
     application.add_handler(main_conversation_handler)
+    application.add_handler(help_handler)
     application.add_handler(add_user_handler)
     application.add_handler(upload_db_handler)
     application.add_handler(download_db_handler)

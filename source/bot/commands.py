@@ -36,6 +36,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
             *data.values(), command
         )
     )
+
     keyboard = [
         [
             InlineKeyboardButton(
@@ -54,22 +55,25 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
 
     if data["chat_id"] in chat_ids:
         text = "Действия:"
-        extra_text = context.user_data.get("text")
-        if extra_text:
-            text = extra_text + "\n\n" + text
-            await context.bot.edit_message_text(
+        go_back = context.user_data.get("back")
+        if go_back:
+            extra_text = context.user_data.get("text")
+            if extra_text:
+                text = extra_text + "\n\n" + text
+            message = await context.bot.edit_message_text(
                 text=text,
                 message_id=context.user_data["message_id"],
                 chat_id=data["chat_id"],
                 reply_markup=reply_markup,
             )
+            context.user_data.clear()
         else:
-            await context.bot.send_message(
+            message = await context.bot.send_message(
                 chat_id=data["chat_id"],
                 reply_markup=reply_markup,
                 text=text,
             )
-        context.user_data.clear()
+        context.user_data["message_id"] = message.id
 
     return STATES["MENU"]
 
@@ -131,7 +135,8 @@ async def track_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
             *data.values(), command
         )
     )
-    text = "Вставьте URL-адрес товара для отслеживания"
+    emoji = "\U0001F7E1"
+    text = f"{emoji} Вставьте URL-адрес товара для отслеживания"
     keyboard = [[InlineKeyboardButton(text="Назад", callback_data=str(STATES["BACK"]))]]
     reply_markup = InlineKeyboardMarkup(keyboard)
 
@@ -146,7 +151,7 @@ async def track_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     else:
         query = update.callback_query
         await query.answer()
-        context.user_data["message_id"] = update.effective_message.id
+        # context.user_data["message_id"] = update.effective_message.id
         await query.edit_message_text(text=text, reply_markup=reply_markup)
     return STATES["TRACK"]
 
@@ -167,15 +172,17 @@ async def track_product(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
     link_is_correct = await check_link(link=link)
     if product_is_existed or not link_is_correct:
         text = "Ошибка"
+        error_emoji = "\U00002757"
         if product_is_existed:
-            context.user_data["text"] = "Такая ссылка уже отслеживается"
+            context.user_data["text"] = f"{error_emoji} Такая ссылка уже отслеживается"
         elif not link_is_correct:
-            context.user_data["text"] = "Ваша ссылка некорректная"
+            context.user_data["text"] = f"{error_emoji} Ваша ссылка некорректная"
 
         context.user_data["call_again"] = True
 
         await message.delete()
         await track_menu(update, context)
+
         return STATES["TRACK"]
 
     else:
@@ -186,13 +193,13 @@ async def track_product(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
             username=data["username"], link=link, name=name, price=price
         )
         if is_added:
-            text = "Товар был добавлен для отслеживается"
+            text = "\U0001F44D Товар был добавлен для отслеживается"
         else:
-            text = "Не удалось добавить товар"
+            text = "\U00002757 Не удалось добавить товар"
         await update.message.delete()
+
         context.user_data["text"] = text
-    # await context.bot.send_message(chat_id=data["chat_id"], text=text)
-    # await message.reply_text(text=text)
+        context.user_data["back"] = True
 
     # Back to the starting point
     await start(update, context)
@@ -208,8 +215,6 @@ async def show_products(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
             *data.values(), command
         )
     )
-
-    context.user_data["message_id"] = update.effective_message.id
 
     query = update.callback_query
     await query.answer()
@@ -233,7 +238,8 @@ async def show_products(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
 
     reply_markup = InlineKeyboardMarkup(keyboard)
 
-    text = "Список отслеживаемых товаров"
+    list_emoji = "\U0001F4DC"
+    text = f"{list_emoji} Список отслеживаемых товаров {list_emoji}"
 
     await query.edit_message_text(text=text, reply_markup=reply_markup)
 
@@ -241,7 +247,7 @@ async def show_products(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
 
 
 async def get_product_actions(
-    update: Update, context: ContextTypes.DEFAULT_TYPE
+        update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> int:
     data = await get_data_from_update(update)
     command = inspect.currentframe().f_code.co_name
@@ -255,6 +261,7 @@ async def get_product_actions(
     callback_index = query.data
     product = context.user_data["products"][callback_index]
     product_id = product["id"]
+    emoji = "\U0001F7E2"
 
     keyboard = [
         [
@@ -267,10 +274,11 @@ async def get_product_actions(
         ],
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
+
     await query.answer()
     await query.edit_message_text(
         reply_markup=reply_markup,
-        text=f"Выбран товар:\n{product['name']}",
+        text=f"Выбран товар:\n\n{emoji} {product['name']}",
     )
 
     return STATES["PRODUCT_LIST"]
@@ -299,7 +307,9 @@ async def remove_product(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     await check_relationship(product_id=product_id)
 
     # Set extra text for next starting menu
-    context.user_data["text"] = "Товар удален"
+    remove_emoji = "\U0001F534"
+    context.user_data["text"] = f"{remove_emoji} Товар удален"
+    context.user_data["back"] = True
 
     # Back to the starting point
     await start(update, context)
@@ -318,7 +328,7 @@ async def upload_db(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def ask_about_download(
-    update: Update, context: ContextTypes.DEFAULT_TYPE
+        update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> int | None:
     """Ask about DB loading"""
 
@@ -332,7 +342,7 @@ async def ask_about_download(
     chat_ids = await get_chat_ids(is_admin=True)
     if data["chat_id"] in chat_ids:
         await context.bot.send_message(
-            chat_id=data["chat_id"], text="Загрузите файл формата 'name.db'"
+            chat_id=data["chat_id"], text="Загрузите файл формата 'db_name.db'"
         )
 
         return STATES["DOWNLOAD_DB"]
@@ -367,8 +377,7 @@ async def back(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
 
     query = update.callback_query
     await query.answer()
-    await query.delete_message()
-    context.user_data.clear()
+    context.user_data["back"] = True
 
     # Back to the starting point
     await start(update, context)
@@ -399,7 +408,21 @@ async def stop(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
             *data.values(), command
         )
     )
-    await update.message.reply_text("Бот остановлен")
+    await update.message.reply_text("Конец диалога")
 
     context.user_data.clear()
     return ConversationHandler.END
+
+
+async def get_help(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    data = await get_data_from_update(update)
+    command = inspect.currentframe().f_code.co_name
+    logger.info(
+        "{0} {1} - {2} ({3}), chat ID={4} used command '/{5}'".format(
+            *data.values(), command
+        )
+    )
+    text = """Чтобы запустить бота введите команду /start.
+После этого ваш диалог с ботом будет активен 30 секунд.
+Если бот перестал реагировать на нажатие кнопок или не отвечает на сообщения,то снова введите команду /start"""
+    await update.message.reply_text(text=text)

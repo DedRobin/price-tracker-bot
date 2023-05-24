@@ -4,6 +4,7 @@ from aiohttp import ClientSession
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import ContextTypes, ConversationHandler
 
+from source.bot.queries import user_exists, delete_user
 from source.bot.services import (
     add_product,
     check_link,
@@ -87,21 +88,60 @@ async def add_user(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             *data.values(), command
         )
     )
-    keyboard = [
-        [
-            InlineKeyboardButton(
-                text="Отмена", callback_data=str(STATES["CANCEL_ADD_USER"])
-            )
+
+    user_in_db = await user_exists(username=data["username"])
+    if user_in_db:
+        text = "Вы уже добавлены как пользователь. Хотите удалить себя?"
+        keyboard = [
+            [
+                InlineKeyboardButton(
+                    text="Да", callback_data=str(STATES["DELETE_MYSELF"])
+                ),
+                InlineKeyboardButton(
+                    text="Нет", callback_data=str(STATES["CANCEL_ADD_USER"])
+                )
+            ]
         ]
-    ]
+    else:
+        text = "Введите секретный ключ"
+        keyboard = [
+            [
+                InlineKeyboardButton(
+                    text="Отмена", callback_data=str(STATES["CANCEL_ADD_USER"])
+                )
+            ]
+        ]
 
     reply_markup = InlineKeyboardMarkup(keyboard)
-    await context.bot.send_message(
+    message = await context.bot.send_message(
         chat_id=data["chat_id"],
-        text="Введите секретный ключ",
+        text=text,
         reply_markup=reply_markup,
     )
+
+    context.user_data["message_id"] = message.id
+
     return STATES["ADD_USER"]
+
+
+async def delete_myself(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    data = await get_data_from_update(update)
+    command = inspect.currentframe().f_code.co_name
+    logger.info(
+        "{0} {1} - {2} ({3}), chat ID={4} used command '/{5}'".format(
+            *data.values(), command
+        )
+    )
+
+    await delete_user(username=data["username"])
+
+    await context.bot.edit_message_text(
+        chat_id=data["chat_id"],
+        message_id=context.user_data["message_id"],
+        text="Вы были удалены",
+    )
+
+    return ConversationHandler.END
 
 
 async def check_admin_key(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
@@ -152,7 +192,6 @@ async def track_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     else:
         query = update.callback_query
         await query.answer()
-        # context.user_data["message_id"] = update.effective_message.id
         await query.edit_message_text(text=text, reply_markup=reply_markup)
     return STATES["TRACK"]
 

@@ -16,7 +16,9 @@ from source.bot.commands import (
     stop,
     track_menu,
     track_product,
-    upload_db, get_help,
+    upload_db,
+    get_help,
+    delete_myself,
 )
 
 from source.bot.states import STATES
@@ -35,6 +37,7 @@ add_user_handler = ConversationHandler(
     states={
         STATES["ADD_USER"]: [
             MessageHandler(filters.TEXT, check_admin_key),
+            CallbackQueryHandler(delete_myself, pattern=rf"^{STATES['DELETE_MYSELF']}$"),
         ]
     },
     fallbacks=[

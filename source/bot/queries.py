@@ -10,8 +10,28 @@ from source.store.database.tools import create_session
 logger = enable_logger(__name__)
 
 
+async def user_exists(username: str) -> bool:
+    """Check user in DB"""
+
+    async_session = await create_session()
+    async with async_session() as session:
+        query = select(User).where(User.username == username)
+        user_in_db = await session.scalar(exists(query).select())
+        return user_in_db
+
+
+async def delete_user(username: str) -> None:
+    """Delete user from DB"""
+
+    async_session = await create_session()
+    async with async_session() as session:
+        query = delete(User).where(User.username == username)
+        await session.execute(query)
+        await session.commit()
+
+
 async def select_users(is_admin: bool = False) -> list[User]:
-    """Get all products for a special user"""
+    """Get all users"""
 
     async_session = await create_session()
     async with async_session() as session:
@@ -138,7 +158,7 @@ async def get_product(product_id: int):
 
 
 async def update_product(
-    product: Product, price: float = None, name: str = None
+        product: Product, price: float = None, name: str = None
 ) -> Product:
     """Update a specific product"""
 

@@ -240,7 +240,7 @@ async def show_products(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     reply_markup = InlineKeyboardMarkup(keyboard)
 
     list_emoji = "\U0001F4DC"
-    text = f"{list_emoji} Список отслеживаемых товаров {list_emoji}"
+    text = f"{list_emoji} Список отслеживаемых товаров"
 
     await query.edit_message_text(text=text, reply_markup=reply_markup)
 
@@ -265,6 +265,12 @@ async def get_product_actions(
     emoji = "\U0001F7E2"
 
     keyboard = [
+        [
+            InlineKeyboardButton(
+                text="Ссылка",
+                url=product["link"]
+            ),
+        ],
         [
             InlineKeyboardButton(
                 text="Удалить", callback_data=f"id={product_id}|{STATES['REMOVE']}"

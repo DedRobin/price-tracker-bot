@@ -38,7 +38,7 @@ async def main():
 
     await application.bot.set_webhook(url=f"{webhook_url}/telegram")
 
-    web_app = create_app(bot_app=application)
+    web_app = await create_app(bot_app=application)
 
     webserver = uvicorn.Server(
         config=uvicorn.Config(app=web_app, port=port, use_colors=False, host=host)

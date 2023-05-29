@@ -5,8 +5,8 @@ from telegram import Update
 from telegram.ext import Application
 from sqladmin import Admin
 
-from source.store.database.tools import get_engine
-from source.store.database.admin import UserAdmin, ProductAdmin, AdminAuth
+from source.database.tools import get_engine
+from source.database.admin import UserAdmin, ProductAdmin, AdminAuth
 
 
 async def create_app(bot_app: Application) -> FastAPI:

@@ -4,7 +4,7 @@ from aiohttp import ClientSession
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import ContextTypes, ConversationHandler
 
-from source.bot.queries import user_exists, delete_user
+from source.database.queries import user_exists, delete_user
 from source.bot.services import (
     add_product,
     check_link,

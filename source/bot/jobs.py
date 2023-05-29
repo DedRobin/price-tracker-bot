@@ -1,7 +1,7 @@
 from aiohttp import ClientSession
 from telegram.ext import ContextTypes
 
-from source.bot.queries import select_products, update_product
+from source.database.queries import select_products, update_product
 from source.parsers import onliner
 from source.settings import enable_logger
 

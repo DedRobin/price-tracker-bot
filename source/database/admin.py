@@ -1,11 +1,16 @@
+import os
+
 from sqladmin import ModelView
-from source.store.database.models import User, Product
+from source.database.models import User, Product
 from sqladmin.authentication import AuthenticationBackend
 from fastapi.responses import RedirectResponse
 from fastapi.requests import Request
 from typing import Optional
 
 from uuid import uuid4
+from source.database.queries import select_users
+
+ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD")
 
 
 class AdminAuth(AuthenticationBackend):
@@ -15,11 +20,15 @@ class AdminAuth(AuthenticationBackend):
         form = await request.form()
         username, password = form["username"], form["password"]
 
-        # Validate
-        token = uuid4()
-        request.session.update({"token": str(token)})
+        admins = await select_users(is_admin=True)
+        admin_usernames = [admin.username for admin in admins]
 
-        return True
+        if password == ADMIN_PASSWORD and username in admin_usernames:
+            token = uuid4()
+            request.session.update({"token": str(token)})
+            return True
+
+        return False
 
     async def logout(self, request: Request) -> bool:
         """Clear the session"""

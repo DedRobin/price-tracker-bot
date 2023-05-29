@@ -4,8 +4,8 @@ from sqlalchemy import delete, exists, select
 from sqlalchemy.orm import selectinload
 
 from source.settings import enable_logger
-from source.store.database.models import Product, User
-from source.store.database.tools import create_session
+from source.database.models import Product, User
+from source.database.tools import create_session
 
 logger = enable_logger(__name__)
 

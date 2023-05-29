@@ -3,7 +3,7 @@ import re
 
 from telegram import Update
 
-from source.bot.queries import (
+from source.database.queries import (
     add_user_for_product,
     exist_product,
     insert_product,

@@ -11,9 +11,11 @@ class Base(DeclarativeBase):
     pass
 
 
+metadata = Base.metadata
+
 users_products = Table(
     "users_products",
-    Base.metadata,
+    metadata,
     Column("users_id", ForeignKey("users.id"), primary_key=True),
     Column("products_id", ForeignKey("products.id"), primary_key=True),
 )
@@ -53,3 +55,11 @@ class Product(Base):
 
     def __str__(self):
         return f"Product '{self.name}'"
+
+
+class SessionToken(Base):
+    __tablename__ = "session_tokens"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    token: Mapped[str] = mapped_column(unique=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))

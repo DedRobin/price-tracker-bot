@@ -3,9 +3,9 @@ from telegram.ext import ContextTypes
 
 from source.database.queries import select_products, update_product
 from source.parsers import onliner
-from source.settings import enable_logger
+from source.settings import get_logger
 
-logger = enable_logger(__name__)
+logger = get_logger(__name__)
 
 
 async def send_notifications(context: ContextTypes.DEFAULT_TYPE):

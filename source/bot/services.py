@@ -13,11 +13,11 @@ from source.database.queries import (
     select_products,
     select_users,
 )
-from source.settings import enable_logger
+from source.settings import get_logger
 
 SERVER_HOST = os.environ.get("SERVER_HOST", "localhost")
 
-logger = enable_logger(__name__)
+logger = get_logger(__name__)
 
 
 async def get_data_from_update(update: Update) -> dict:

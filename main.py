@@ -7,7 +7,7 @@ from telegram.ext import ApplicationBuilder, ContextTypes
 from source.bot.custom_entities import CustomContext
 from source.bot.handlers import add_user_handler, download_db_handler, upload_db_handler, main_conversation_handler, help_handler
 from source.bot.jobs import send_notifications
-from source.settings import enable_logger
+from source.settings import get_logger
 from source.webserver.tools import create_app
 
 
@@ -18,7 +18,7 @@ async def main():
     port = int(os.environ.get("PORT", 5000))
     send_delay = int(os.environ.get("SEND_EVERY", 3600))
 
-    enable_logger()
+    get_logger()
 
     context_types = ContextTypes(context=CustomContext)
 

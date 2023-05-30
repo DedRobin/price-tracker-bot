@@ -3,9 +3,9 @@ import os
 from aiohttp import ClientSession
 from bs4 import BeautifulSoup
 
-from source.settings import enable_logger
+from source.settings import get_logger
 
-logger = enable_logger()
+logger = get_logger(__name__)
 
 SERVER_HOST = os.environ.get("SERVER_HOST", "localhost")
 

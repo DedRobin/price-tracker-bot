@@ -18,10 +18,10 @@ from source.bot.services import (
 )
 from source.bot.states import STATES
 from source.parsers import onliner
-from source.settings import enable_logger
+from source.settings import get_logger
 from source.bot.settings import TIMEOUT_CONV
 
-logger = enable_logger(__name__)
+logger = get_logger(__name__)
 
 # Callback points
 TRACK_PRODUCT_CONV, EDIT_TRACK_PRODUCTS_CONV = range(2)

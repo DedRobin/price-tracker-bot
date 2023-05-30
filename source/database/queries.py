@@ -3,11 +3,11 @@ from datetime import datetime
 from sqlalchemy import delete, exists, select
 from sqlalchemy.orm import selectinload
 
-from source.settings import enable_logger
-from source.database.models import Product, User
-from source.database.tools import create_session
+from source.settings import get_logger
+from source.database.models import Product, User, SessionToken
+from source.database.engine import create_session
 
-logger = enable_logger(__name__)
+logger = get_logger(__name__)
 
 
 async def user_exists(username: str) -> bool:
@@ -30,13 +30,15 @@ async def delete_user(username: str) -> None:
         await session.commit()
 
 
-async def select_users(is_admin: bool = False) -> list[User]:
+async def select_users(username: str = "", is_admin: bool = False) -> list[User]:
     """Get all users"""
 
     async_session = await create_session()
     async with async_session() as session:
         query = select(User)
 
+        if username:
+            query = query.where(User.username == username)
         if is_admin:
             query = query.where(User.is_admin == is_admin)
 
@@ -201,4 +203,17 @@ async def update_users_for_special_product(username: str, product_id: int) -> No
             .options(selectinload(Product.users))
         )
         product.users.remove(user)
+        await session.commit()
+
+
+async def insert_token(token: str, username: str) -> None:
+    """Add the token for user"""
+
+    async_session = await create_session()
+    async with async_session() as session:
+        user = await select_users(username=username)
+        user = user[0]
+
+        token = SessionToken(token=token, user_id=user.id)
+        session.add(token)
         await session.commit()

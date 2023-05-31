@@ -1,4 +1,3 @@
-import time
 from fastapi import FastAPI
 from fastapi.requests import Request
 from fastapi.responses import Response
@@ -8,7 +7,7 @@ from telegram.ext import Application
 from sqladmin import Admin
 
 from source.database.engine import get_engine
-from source.database.admin import UserAdmin, ProductAdmin, AdminAuth
+from source.database.admin import UserAdmin, ProductAdmin, SessionTokenAdmin, AdminAuth
 
 
 async def create_app(bot_app: Application) -> FastAPI:
@@ -29,6 +28,7 @@ async def create_app(bot_app: Application) -> FastAPI:
 
     admin.add_view(UserAdmin)
     admin.add_view(ProductAdmin)
+    admin.add_view(SessionTokenAdmin)
 
     @web_app.get("/")
     async def index():

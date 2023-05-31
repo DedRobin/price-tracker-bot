@@ -2,7 +2,7 @@ import hashlib
 import os
 
 from sqladmin import ModelView
-from source.database.models import User, Product
+from source.database.models import User, Product, SessionToken
 from sqladmin.authentication import AuthenticationBackend
 from fastapi.responses import RedirectResponse
 from fastapi.requests import Request
@@ -91,7 +91,24 @@ class ProductAdmin(ModelView, model=Product):
     # Options
     column_sortable_list = [
         Product.product_link,
+        Product.name,
         Product.current_price,
         Product.previous_price,
         Product.updated_at,
+    ]
+
+
+class SessionTokenAdmin(ModelView, model=SessionToken):
+    # Columns
+    column_list = [
+        SessionToken.id,
+        SessionToken.token,
+        SessionToken.user_id,
+    ]
+
+    # Options
+    column_sortable_list = [
+        SessionToken.id,
+        SessionToken.token,
+        SessionToken.user_id,
     ]

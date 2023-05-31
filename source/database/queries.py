@@ -223,5 +223,5 @@ async def exist_token(token: str) -> bool:
     async_session = await create_session()
     async with async_session() as session:
         query = select(SessionToken).where(SessionToken.token == token)
-        token_in_db = await session.scalar(exists(query).select())
-        return token_in_db
+        it_exists = await session.scalar(exists(query).select())
+        return it_exists

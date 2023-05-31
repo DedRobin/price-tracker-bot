@@ -10,7 +10,7 @@ from typing import Optional
 
 from uuid import uuid4
 from source.database.queries import select_users
-from source.webserver.services import add_token_for_user
+from source.webserver.services import add_token_for_user, check_token_in_db
 
 ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD")
 
@@ -46,6 +46,8 @@ class AdminAuth(AuthenticationBackend):
     async def logout(self, request: Request) -> bool:
         """Clear the session"""
 
+        # Delete token
+
         request.session.clear()
         return True
 
@@ -53,8 +55,9 @@ class AdminAuth(AuthenticationBackend):
         """Authenticates the user if he has a token"""
 
         token = request.session.get("token")
+        token_exist = await check_token_in_db(token)
 
-        if not token:
+        if not token or not token_exist:
             return RedirectResponse(request.url_for("admin:login"), status_code=302)
 
 

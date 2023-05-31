@@ -217,3 +217,11 @@ async def insert_token(token: str, username: str) -> None:
         token = SessionToken(token=token, user_id=user.id)
         session.add(token)
         await session.commit()
+
+
+async def exist_token(token: str) -> bool:
+    async_session = await create_session()
+    async with async_session() as session:
+        query = select(SessionToken).where(SessionToken.token == token)
+        token_in_db = await session.scalar(exists(query).select())
+        return token_in_db

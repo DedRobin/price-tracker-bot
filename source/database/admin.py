@@ -1,3 +1,5 @@
+import base64
+import binascii
 import hashlib
 import os
 
@@ -18,7 +20,7 @@ ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD")
 class AdminAuth(AuthenticationBackend):
 
     async def login(self, request: Request) -> bool:
-        """Login the user and validate him/her"""
+        """Login the user and validate it"""
 
         form = await request.form()
         username, password = form["username"], form["password"]

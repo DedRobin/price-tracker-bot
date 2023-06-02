@@ -1,7 +1,7 @@
+import time
 from fastapi import FastAPI
 from fastapi.requests import Request
 from fastapi.responses import Response
-from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from telegram import Update
 from telegram.ext import Application
 from sqladmin import Admin
@@ -12,8 +12,6 @@ from source.database.admin import UserAdmin, ProductAdmin, SessionTokenAdmin, Ad
 
 async def create_app(bot_app: Application) -> FastAPI:
     web_app = FastAPI()
-
-    # web_app.add_middleware(TrustedHostMiddleware, allowed_hosts=["127.0.0.2"])
 
     engine = await get_engine()
 

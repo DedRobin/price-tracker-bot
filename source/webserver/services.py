@@ -1,4 +1,4 @@
-from source.database.queries import insert_token, exist_token, remove_token
+from source.database.queries import exist_token, insert_token, remove_token
 
 
 async def add_token_for_user(token: str, username: str) -> None:

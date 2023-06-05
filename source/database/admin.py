@@ -1,5 +1,6 @@
 from sqladmin import ModelView
-from source.database.models import User, Product, SessionToken
+
+from source.database.models import Product, SessionToken, User
 
 
 class UserAdmin(ModelView, model=User):

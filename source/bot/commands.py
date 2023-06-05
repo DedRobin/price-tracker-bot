@@ -4,7 +4,6 @@ from aiohttp import ClientSession
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import ContextTypes, ConversationHandler
 
-from source.database.queries import user_exists, delete_user
 from source.bot.services import (
     add_product,
     check_link,
@@ -16,10 +15,11 @@ from source.bot.services import (
     post_user,
     untrack_product,
 )
+from source.bot.settings import TIMEOUT_CONV
 from source.bot.states import STATES
+from source.database.queries import delete_user, user_exists
 from source.parsers import onliner
 from source.settings import get_logger
-from source.bot.settings import TIMEOUT_CONV
 
 logger = get_logger(__name__)
 
@@ -99,7 +99,7 @@ async def add_user(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
                 ),
                 InlineKeyboardButton(
                     text="Нет", callback_data=str(STATES["CANCEL_ADD_USER"])
-                )
+                ),
             ]
         ]
     else:
@@ -290,7 +290,7 @@ async def show_products(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
 
 
 async def get_product_actions(
-        update: Update, context: ContextTypes.DEFAULT_TYPE
+    update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> int:
     data = await get_data_from_update(update)
     command = inspect.currentframe().f_code.co_name
@@ -308,10 +308,7 @@ async def get_product_actions(
 
     keyboard = [
         [
-            InlineKeyboardButton(
-                text="Ссылка",
-                url=product["link"]
-            ),
+            InlineKeyboardButton(text="Ссылка", url=product["link"]),
         ],
         [
             InlineKeyboardButton(
@@ -377,7 +374,7 @@ async def upload_db(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def ask_about_download(
-        update: Update, context: ContextTypes.DEFAULT_TYPE
+    update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> int | None:
     """Ask about DB loading"""
 
@@ -390,7 +387,7 @@ async def ask_about_download(
     )
     chat_ids = await get_chat_ids(is_admin=True)
     if data["chat_id"] in chat_ids:
-        message = await context.bot.send_message(
+        await context.bot.send_message(
             chat_id=data["chat_id"], text="Загрузите файл формата 'db_name.db'"
         )
 

@@ -1,12 +1,12 @@
 from datetime import datetime
 from typing import Any, Sequence
 
-from sqlalchemy import delete, exists, select, Row, RowMapping
+from sqlalchemy import Row, RowMapping, delete, exists, select
 from sqlalchemy.orm import selectinload
 
-from source.settings import get_logger
-from source.database.models import Product, User, SessionToken
 from source.database.engine import create_session
+from source.database.models import Product, SessionToken, User
+from source.settings import get_logger
 
 logger = get_logger(__name__)
 
@@ -31,8 +31,9 @@ async def delete_user(username: str) -> None:
         await session.commit()
 
 
-async def select_users(username: str = "", is_admin: bool = False, lazy_load: bool = True) -> Sequence[
-    Row | RowMapping | Any]:
+async def select_users(
+    username: str = "", is_admin: bool = False, lazy_load: bool = True
+) -> Sequence[Row | RowMapping | Any]:
     """Get all users"""
 
     async_session = await create_session()
@@ -164,7 +165,7 @@ async def get_product(product_id: int):
 
 
 async def update_product(
-        product: Product, price: float = None, name: str = None
+    product: Product, price: float = None, name: str = None
 ) -> Product:
     """Update a specific product"""
 

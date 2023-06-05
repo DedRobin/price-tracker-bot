@@ -1,22 +1,25 @@
-from fastapi import FastAPI
-from sqladmin import Admin
-from sqlalchemy.ext.asyncio.engine import AsyncEngine
-
-from source.database.admin import UserAdmin, ProductAdmin, SessionTokenAdmin
-
-from sqladmin.authentication import AuthenticationBackend
-from fastapi.responses import RedirectResponse
-from fastapi.requests import Request
+from asyncio import sleep
 from typing import Optional
 from uuid import uuid4
 
-from source.settings import ADMIN_PASSWORD
+from fastapi import FastAPI
+from fastapi.requests import Request
+from fastapi.responses import RedirectResponse
+from sqladmin import Admin
+from sqladmin.authentication import AuthenticationBackend
+from sqlalchemy.ext.asyncio.engine import AsyncEngine
+
+from source.database.admin import ProductAdmin, SessionTokenAdmin, UserAdmin
 from source.database.queries import select_users
-from source.webserver.services import add_token_for_user, check_token_in_db, remove_token_for_user
+from source.settings import ADMIN_PASSWORD
+from source.webserver.services import (
+    add_token_for_user,
+    check_token_in_db,
+    remove_token_for_user,
+)
 
 
 class AdminAuth(AuthenticationBackend):
-
     async def login(self, request: Request) -> bool:
         """Login the user and validate it"""
 
@@ -28,7 +31,9 @@ class AdminAuth(AuthenticationBackend):
         if admin_users:
             user = admin_users[0]
 
-            user_json = {k: v for k, v in user.__dict__.items() if k != "_sa_instance_state"}
+            user_json = {
+                k: v for k, v in user.__dict__.items() if k != "_sa_instance_state"
+            }
 
             if username == user.username and password == ADMIN_PASSWORD:
                 token = str(uuid4())
@@ -39,7 +44,6 @@ class AdminAuth(AuthenticationBackend):
                 }
                 request.session.update(session_data)
                 return True
-
         return False
 
     async def logout(self, request: Request) -> bool:
@@ -67,7 +71,7 @@ def get_admin_panel(web_app: FastAPI, engine: AsyncEngine) -> None:
         app=web_app,
         title="Price Tracker Admin",
         engine=engine,
-        authentication_backend=authentication_backend
+        authentication_backend=authentication_backend,
     )
 
     admin.add_view(UserAdmin)

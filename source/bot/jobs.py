@@ -22,26 +22,26 @@ async def send_notifications(context: ContextTypes.DEFAULT_TYPE):
 
             if not data:
                 logger.error(f"Something is wrong. The product={url}")
+            else:
+                _, new_price = data
+                if new_price != product.current_price:
+                    updated_product = await update_product(product=product, price=new_price)
+                    chat_ids = [user.chat_id for user in updated_product.users]
 
-            _, new_price = await onliner.parse(session, url)
-            if new_price != product.current_price:
-                updated_product = await update_product(product=product, price=new_price)
-                chat_ids = [user.chat_id for user in updated_product.users]
+                    # Product data
+                    current_price = updated_product.current_price
+                    previous_price = updated_product.previous_price
+                    link = updated_product.product_link
+                    name = updated_product.name
 
-                # Product data
-                current_price = updated_product.current_price
-                previous_price = updated_product.previous_price
-                link = updated_product.product_link
-                name = updated_product.name
+                    # Count a difference
+                    different = current_price - previous_price
+                    different = round(different, 2)
+                    if abs(different) >= 1:
+                        word = "снизилась" if different < 0 else "выросла"
+                        emoji = "\U0001F601" if different < 0 else "\U0001F621"
 
-                # Count a difference
-                different = current_price - previous_price
-                different = round(different, 2)
-                if abs(different) >= 1:
-                    word = "снизилась" if different < 0 else "выросла"
-                    emoji = "\U0001F601" if different < 0 else "\U0001F621"
-
-                    notification_text = f"""{emoji}{name}
+                        notification_text = f"""{emoji}{name}
                     
 {link}  
     
@@ -49,10 +49,10 @@ async def send_notifications(context: ContextTypes.DEFAULT_TYPE):
 Предыдущая цена = {previous_price} BYN
 Новая цена = {current_price} BYN"""
 
-                    for chat_id in chat_ids:
-                        await context.bot.send_message(
-                            chat_id=chat_id, text=notification_text
-                        )
+                        for chat_id in chat_ids:
+                            await context.bot.send_message(
+                                chat_id=chat_id, text=notification_text
+                            )
                 else:
                     pass
 

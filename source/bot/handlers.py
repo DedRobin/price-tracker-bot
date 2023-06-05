@@ -1,14 +1,24 @@
 from warnings import filterwarnings
 
-from telegram.ext import CallbackQueryHandler, CommandHandler, ConversationHandler, MessageHandler, TypeHandler, filters
+from telegram.ext import (
+    CallbackQueryHandler,
+    CommandHandler,
+    ConversationHandler,
+    MessageHandler,
+    TypeHandler,
+    filters,
+)
 from telegram.warnings import PTBUserWarning
+
 from source.bot.commands import (
     add_user,
     ask_about_download,
     back,
     cancel_add_user,
     check_admin_key,
+    delete_myself,
     download_db,
+    get_help,
     get_product_actions,
     remove_product,
     show_products,
@@ -17,12 +27,9 @@ from source.bot.commands import (
     track_menu,
     track_product,
     upload_db,
-    get_help,
-    delete_myself,
 )
-
-from source.bot.states import STATES
 from source.bot.settings import TIMEOUT_CONV
+from source.bot.states import STATES
 
 filterwarnings(
     action="ignore", message=r".*CallbackQueryHandler", category=PTBUserWarning
@@ -37,7 +44,9 @@ add_user_handler = ConversationHandler(
     states={
         STATES["ADD_USER"]: [
             MessageHandler(filters.TEXT, check_admin_key),
-            CallbackQueryHandler(delete_myself, pattern=rf"^{STATES['DELETE_MYSELF']}$"),
+            CallbackQueryHandler(
+                delete_myself, pattern=rf"^{STATES['DELETE_MYSELF']}$"
+            ),
         ]
     },
     fallbacks=[
@@ -87,16 +96,13 @@ edit_product_handler = ConversationHandler(
     ],
     states={
         STATES["PRODUCT_LIST"]: [
-            CallbackQueryHandler(
-                get_product_actions, pattern=r"^id=\d+$"),
+            CallbackQueryHandler(get_product_actions, pattern=r"^id=\d+$"),
             CallbackQueryHandler(
                 remove_product, pattern=rf"^id=\d+\|{STATES['REMOVE']}$"
             ),
         ],
     },
-    fallbacks=[
-        CallbackQueryHandler(back, pattern=rf"^{STATES['BACK']}$")
-    ]
+    fallbacks=[CallbackQueryHandler(back, pattern=rf"^{STATES['BACK']}$")],
 )
 
 main_conversation_handler = ConversationHandler(

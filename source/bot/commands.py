@@ -229,16 +229,19 @@ async def track_product(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
         async with ClientSession() as session:
             name, price = await onliner.parse(session=session, url=link)
 
-        is_added = await add_product(
-            username=data["username"], link=link, name=name, price=price
-        )
-        if is_added:
-            text = "\U0001F44D Товар был добавлен для отслеживается"
+        if not name and not price:
+            logger.error(f"Something is wrong.\nThe product={link}")
         else:
-            text = "\U00002757 Не удалось добавить товар"
-        await update.message.delete()
+            is_added = await add_product(
+                username=data["username"], link=link, name=name, price=price
+            )
+            if is_added:
+                text = "\U0001F44D Товар был добавлен для отслеживается"
+            else:
+                text = "\U00002757 Не удалось добавить товар"
+            await update.message.delete()
 
-        context.user_data["text"] = text
+            context.user_data["text"] = text
         context.user_data["back"] = True
 
     # Back to the starting point

@@ -18,8 +18,12 @@ async def send_notifications(context: ContextTypes.DEFAULT_TYPE):
             url = product.product_link
 
             # Received a product price by URL
-            _, new_price = await onliner.parse(session, url)
+            data = await onliner.parse(session, url)
 
+            if not data:
+                logger.error(f"Something is wrong. The product={url}")
+
+            _, new_price = await onliner.parse(session, url)
             if new_price != product.current_price:
                 updated_product = await update_product(product=product, price=new_price)
                 chat_ids = [user.chat_id for user in updated_product.users]

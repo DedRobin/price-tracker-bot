@@ -84,6 +84,7 @@ class ProductAdmin(ModelView, model=Product):
     # Columns
     column_list = [
         Product.id,
+        Product.name,
         Product.product_link,
         Product.current_price,
         Product.previous_price,

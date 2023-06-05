@@ -1,32 +1,18 @@
-import time
 from fastapi import FastAPI
 from fastapi.requests import Request
 from fastapi.responses import Response
 from telegram import Update
 from telegram.ext import Application
-from sqladmin import Admin
 
+from source.database.admin_auth import get_admin_panel
 from source.database.engine import get_engine
-from source.database.admin import UserAdmin, ProductAdmin, SessionTokenAdmin, AdminAuth
 
 
 async def create_app(bot_app: Application) -> FastAPI:
     web_app = FastAPI()
 
     engine = await get_engine()
-
-    authentication_backend = AdminAuth(secret_key="secret_key")
-
-    admin = Admin(
-        app=web_app,
-        title="Price Tracker Admin",
-        engine=engine,
-        authentication_backend=authentication_backend
-    )
-
-    admin.add_view(UserAdmin)
-    admin.add_view(ProductAdmin)
-    admin.add_view(SessionTokenAdmin)
+    get_admin_panel(web_app=web_app, engine=engine)
 
     @web_app.get("/")
     async def index():

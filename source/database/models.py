@@ -30,6 +30,9 @@ class User(Base):
     is_admin: Mapped[bool] = mapped_column(default=False)
 
     # Relations
+    token: Mapped[SessionToken] = relationship(
+        "SessionToken", uselist=False, back_populates="user"
+    )
     products: Mapped[List[Product]] = relationship(
         secondary=users_products, back_populates="users"
     )
@@ -63,3 +66,9 @@ class SessionToken(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     token: Mapped[str] = mapped_column(unique=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+
+    # Relations
+    user: Mapped[User] = relationship("User", back_populates="token")
+
+    def __str__(self):
+        return f"Token '{self.id}'"

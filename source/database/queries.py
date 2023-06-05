@@ -1,6 +1,7 @@
 from datetime import datetime
+from typing import Any, Sequence
 
-from sqlalchemy import delete, exists, select
+from sqlalchemy import delete, exists, select, Row, RowMapping
 from sqlalchemy.orm import selectinload
 
 from source.settings import get_logger
@@ -30,7 +31,8 @@ async def delete_user(username: str) -> None:
         await session.commit()
 
 
-async def select_users(username: str = "", is_admin: bool = False) -> list[User]:
+async def select_users(username: str = "", is_admin: bool = False, lazy_load: bool = True) -> Sequence[
+    Row | RowMapping | Any]:
     """Get all users"""
 
     async_session = await create_session()
@@ -41,6 +43,8 @@ async def select_users(username: str = "", is_admin: bool = False) -> list[User]
             query = query.where(User.username == username)
         if is_admin:
             query = query.where(User.is_admin == is_admin)
+        if not lazy_load:
+            query = query.options(selectinload(User.products), selectinload(User.token))
 
         users = await session.scalars(query)
         users = users.all()
@@ -211,11 +215,20 @@ async def insert_token(token: str, username: str) -> None:
 
     async_session = await create_session()
     async with async_session() as session:
-        user = await select_users(username=username)
+        user = await select_users(username=username, is_admin=True, lazy_load=False)
         user = user[0]
+        new_token = SessionToken(token=token, user_id=user.id)
+        session.add(new_token)
+        await session.commit()
 
-        token = SessionToken(token=token, user_id=user.id)
-        session.add(token)
+
+async def remove_token(token: str) -> None:
+    """Add the token for user"""
+
+    async_session = await create_session()
+    async with async_session() as session:
+        query = delete(SessionToken).where(SessionToken.token == token)
+        await session.execute(query)
         await session.commit()
 
 

@@ -1,4 +1,7 @@
+import os
 import logging
+
+ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD")
 
 
 def get_logger(name: str = "") -> logging.Logger:

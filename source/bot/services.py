@@ -7,11 +7,9 @@ from source.database.queries import (
     add_user_for_product,
     exist_product,
     insert_product,
-    insert_user,
     remove_product,
     remove_user_from_special_product,
     select_products,
-    select_users,
 )
 from source.settings import get_logger
 
@@ -30,28 +28,6 @@ async def get_data_from_update(update: Update) -> dict:
     }
 
     return data
-
-
-async def post_user(admin_key: str, username: str, chat_id: int) -> int:
-    if admin_key == os.environ.get("USER_KEY"):
-        await insert_user(username=username, chat_id=chat_id)
-        return True
-    elif admin_key == os.environ.get("ADMIN_KEY"):
-        await insert_user(username=username, chat_id=chat_id, is_admin=True)
-        return True
-    return False
-
-
-async def get_chat_ids(is_admin: bool = False) -> list:
-    """Get all chat IDs by some"""
-
-    users = await select_users(
-        is_admin=is_admin,
-    )
-
-    logger.info("Get chat IDs")
-    chat_ids = [user.chat_id for user in users]
-    return chat_ids
 
 
 async def check_link(link: str) -> bool:

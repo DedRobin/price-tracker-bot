@@ -1,4 +1,3 @@
-from asyncio import sleep
 from typing import Optional
 from uuid import uuid4
 
@@ -10,9 +9,9 @@ from sqladmin.authentication import AuthenticationBackend
 from sqlalchemy.ext.asyncio.engine import AsyncEngine
 
 from source.database.admin import ProductAdmin, SessionTokenAdmin, UserAdmin
-from source.database.queries import select_users
+from source.bot.users.queries import select_users
 from source.settings import ADMIN_PASSWORD
-from source.webserver.services import (
+from source.bot.session_tokens.services import (
     add_token_for_user,
     check_token_in_db,
     remove_token_for_user,

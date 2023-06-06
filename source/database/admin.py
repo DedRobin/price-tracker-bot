@@ -28,7 +28,7 @@ class UserAdmin(ModelView, model=User):
 
     # Permissions
     can_create = True
-    can_edit = False
+    can_edit = True
     can_delete = True
     can_view_details = True
 

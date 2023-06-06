@@ -72,3 +72,14 @@ class SessionToken(Base):
 
     def __str__(self):
         return f"Token '{self.id}'"
+
+
+class JoinedUser(Base):
+    __tablename__ = "joined_users"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    username: Mapped[str] = mapped_column(unique=True, nullable=True)
+    chat_id: Mapped[int] = mapped_column(unique=True, nullable=True)
+
+    def __str__(self):
+        return f"JoinUser '{self.username}'"

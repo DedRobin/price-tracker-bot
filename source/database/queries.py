@@ -3,63 +3,13 @@ from typing import Any, Sequence
 
 from sqlalchemy import Row, RowMapping, delete, exists, select
 from sqlalchemy.orm import selectinload
+from sqlalchemy.ext.asyncio.session import AsyncSession
 
 from source.database.engine import create_session
-from source.database.models import Product, SessionToken, User
+from source.database.models import Product, SessionToken, User, JoinedUser
 from source.settings import get_logger
 
 logger = get_logger(__name__)
-
-
-async def user_exists(username: str) -> bool:
-    """Check user in DB"""
-
-    async_session = await create_session()
-    async with async_session() as session:
-        query = select(User).where(User.username == username)
-        user_in_db = await session.scalar(exists(query).select())
-        return user_in_db
-
-
-async def delete_user(username: str) -> None:
-    """Delete user from DB"""
-
-    async_session = await create_session()
-    async with async_session() as session:
-        query = delete(User).where(User.username == username)
-        await session.execute(query)
-        await session.commit()
-
-
-async def select_users(
-    username: str = "", is_admin: bool = False, lazy_load: bool = True
-) -> Sequence[Row | RowMapping | Any]:
-    """Get all users"""
-
-    async_session = await create_session()
-    async with async_session() as session:
-        query = select(User)
-
-        if username:
-            query = query.where(User.username == username)
-        if is_admin:
-            query = query.where(User.is_admin == is_admin)
-        if not lazy_load:
-            query = query.options(selectinload(User.products), selectinload(User.token))
-
-        users = await session.scalars(query)
-        users = users.all()
-        return users
-
-
-async def insert_user(username: str, chat_id: int, is_admin: bool = False) -> None:
-    """Add a new user"""
-
-    async_session = await create_session()
-    async with async_session() as session:
-        user = User(username=username, chat_id=chat_id, is_admin=is_admin)
-        session.add(user)
-        await session.commit()
 
 
 async def exist_product(link: str) -> bool:
@@ -120,7 +70,7 @@ async def remove_user_from_special_product(username: str, product_id: int) -> No
         await session.commit()
 
 
-async def select_products(params: dict = None) -> list[Product]:
+async def select_products(params: dict = None) -> Sequence[Row | RowMapping | Any]:
     """Get products by some filter"""
 
     logger.info("Receiving products")
@@ -165,7 +115,7 @@ async def get_product(product_id: int):
 
 
 async def update_product(
-    product: Product, price: float = None, name: str = None
+        product: Product, price: float = None, name: str = None
 ) -> Product:
     """Update a specific product"""
 
@@ -239,3 +189,19 @@ async def exist_token(token: str) -> bool:
         query = select(SessionToken).where(SessionToken.token == token)
         it_exists = await session.scalar(exists(query).select())
         return it_exists
+
+
+async def add_joined_user(session: AsyncSession, data: dict) -> bool:
+    join_user = JoinedUser(username=data["username"], chat_id=data["chat_id"])
+    session.add(join_user)
+    await session.commit()
+    return True
+
+
+async def get_joined_users() -> Sequence[Row | RowMapping | Any]:
+    async_session = await create_session()
+    async with async_session() as session:
+        query = select(JoinedUser)
+        result = await session.scalars(query)
+        result = result.all()
+        return result

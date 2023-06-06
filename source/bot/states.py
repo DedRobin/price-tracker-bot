@@ -3,11 +3,16 @@ list_of_states = [
     # Menu
     "TRACK_PRODUCT_CONV",
     "EDIT_TRACK_PRODUCTS_CONV",
+    "ASKS",
     # User actions
     "DELETE_MYSELF",
-    # Actions for
+    # Actions for products
     "TRACK",
     "PRODUCT_LIST",
+    # Actions for notifications
+    "ASK_ACTIONS",
+    "APPLY_ASK",
+    "REFUSE_ASK",
     # Commands
     "ADD_USER",
     "CANCEL_ADD_USER",

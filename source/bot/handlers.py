@@ -11,12 +11,9 @@ from telegram.ext import (
 from telegram.warnings import PTBUserWarning
 
 from source.bot.commands import (
-    add_user,
     ask_about_download,
     back,
     cancel_add_user,
-    check_admin_key,
-    delete_myself,
     download_db,
     get_help,
     get_product_actions,
@@ -26,10 +23,13 @@ from source.bot.commands import (
     stop,
     track_menu,
     track_product,
-    upload_db,
+    upload_db
 )
+from source.bot.users.commands import show_asks, ask_to_join, apply_ask, refuse_ask, add_user, check_admin_key, \
+    delete_myself
 from source.bot.settings import TIMEOUT_CONV
 from source.bot.states import STATES
+from source.bot.users.commands import get_joined_user_actions
 
 filterwarnings(
     action="ignore", message=r".*CallbackQueryHandler", category=PTBUserWarning
@@ -57,6 +57,9 @@ add_user_handler = ConversationHandler(
 help_handler = CommandHandler("help", get_help)
 
 upload_db_handler = CommandHandler("upload_db", upload_db)
+
+ask_to_join_handler = CommandHandler("ask_to_join", ask_to_join)
+
 download_db_handler = ConversationHandler(
     conversation_timeout=TIMEOUT_CONV,
     entry_points=[CommandHandler("download_db", ask_about_download)],
@@ -105,6 +108,23 @@ edit_product_handler = ConversationHandler(
     fallbacks=[CallbackQueryHandler(back, pattern=rf"^{STATES['BACK']}$")],
 )
 
+notifications_handler = ConversationHandler(
+    conversation_timeout=TIMEOUT_CONV,
+    entry_points=[
+        CallbackQueryHandler(
+            show_asks, pattern=rf"^{STATES['ASKS']}$"
+        )
+    ],
+    states={
+        STATES["ASK_ACTIONS"]: [
+            CallbackQueryHandler(get_joined_user_actions, pattern=rf"^ask_id=\d+$"),
+            CallbackQueryHandler(apply_ask, pattern=rf"{STATES['APPLY_ASK']}$"),
+            CallbackQueryHandler(refuse_ask, pattern=rf"{STATES['REFUSE_ASK']}$"),
+        ],
+    },
+    fallbacks=[CallbackQueryHandler(back, pattern=rf"^{STATES['BACK']}$")],
+)
+
 main_conversation_handler = ConversationHandler(
     conversation_timeout=TIMEOUT_CONV,
     entry_points=[
@@ -114,6 +134,7 @@ main_conversation_handler = ConversationHandler(
         STATES["MENU"]: [
             track_product_handler,
             edit_product_handler,
+            notifications_handler,
         ],
     },
     fallbacks=[

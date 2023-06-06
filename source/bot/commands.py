@@ -9,15 +9,14 @@ from source.bot.services import (
     check_link,
     check_product_in_db,
     check_relationship,
-    get_chat_ids,
     get_data_from_update,
     get_user_products,
-    post_user,
     untrack_product,
 )
 from source.bot.settings import TIMEOUT_CONV
 from source.bot.states import STATES
-from source.database.queries import delete_user, user_exists
+from source.bot.users.queries import select_users
+from source.bot.users.services import get_chat_ids
 from source.parsers import onliner
 from source.settings import get_logger
 
@@ -51,17 +50,26 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
         ]
     ]
 
-    reply_markup = InlineKeyboardMarkup(keyboard)
-
-    chat_ids = await get_chat_ids()
-
-    if data["chat_id"] in chat_ids:
+    users = await select_users(username=data["username"])
+    if users:
+        user = users[0]
+        if user.is_admin:
+            keyboard.append(
+                [
+                    InlineKeyboardButton(
+                        text="Уведомления",
+                        callback_data=str(STATES["ASKS"]),
+                    )
+                ]
+            )
+        reply_markup = InlineKeyboardMarkup(keyboard)
         text = "Действия:"
         go_back = context.user_data.get("back")
         if go_back:
             extra_text = context.user_data.get("text")
             if extra_text:
                 text = extra_text + "\n\n" + text
+
             message = await context.bot.edit_message_text(
                 text=text,
                 message_id=context.user_data["message_id"],
@@ -78,94 +86,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
         context.user_data["message_id"] = message.id
 
     return STATES["MENU"]
-
-
-async def add_user(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    data = await get_data_from_update(update)
-    command = inspect.currentframe().f_code.co_name
-    logger.info(
-        "{0} {1} - {2} ({3}), chat ID={4} used command '/{5}'".format(
-            *data.values(), command
-        )
-    )
-
-    user_in_db = await user_exists(username=data["username"])
-    if user_in_db:
-        text = "Вы уже добавлены как пользователь. Хотите удалить себя?"
-        keyboard = [
-            [
-                InlineKeyboardButton(
-                    text="Да", callback_data=str(STATES["DELETE_MYSELF"])
-                ),
-                InlineKeyboardButton(
-                    text="Нет", callback_data=str(STATES["CANCEL_ADD_USER"])
-                ),
-            ]
-        ]
-    else:
-        text = "Введите секретный ключ"
-        keyboard = [
-            [
-                InlineKeyboardButton(
-                    text="Отмена", callback_data=str(STATES["CANCEL_ADD_USER"])
-                )
-            ]
-        ]
-
-    reply_markup = InlineKeyboardMarkup(keyboard)
-    message = await context.bot.send_message(
-        chat_id=data["chat_id"],
-        text=text,
-        reply_markup=reply_markup,
-    )
-
-    context.user_data["message_id"] = message.id
-
-    return STATES["ADD_USER"]
-
-
-async def delete_myself(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    data = await get_data_from_update(update)
-    command = inspect.currentframe().f_code.co_name
-    logger.info(
-        "{0} {1} - {2} ({3}), chat ID={4} used command '/{5}'".format(
-            *data.values(), command
-        )
-    )
-
-    await delete_user(username=data["username"])
-
-    await context.bot.edit_message_text(
-        chat_id=data["chat_id"],
-        message_id=context.user_data["message_id"],
-        text="Вы были удалены",
-    )
-
-    return ConversationHandler.END
-
-
-async def check_admin_key(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    admin_key = update.message.text
-    await update.message.delete()
-
-    data = await get_data_from_update(update)
-    command = inspect.currentframe().f_code.co_name
-    logger.info(
-        "{0} {1} - {2} ({3}), chat ID={4} used command '/{5}'".format(
-            *data.values(), command
-        )
-    )
-
-    user_created = await post_user(
-        admin_key=admin_key, username=data["username"], chat_id=data["chat_id"]
-    )
-    if user_created:
-        text = "Пользователь добавлен"
-    else:
-        text = "Не удалось добавить пользователя"
-
-    await context.bot.send_message(chat_id=data["chat_id"], text=text)
-    return ConversationHandler.END
 
 
 async def track_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
@@ -290,7 +210,7 @@ async def show_products(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
 
 
 async def get_product_actions(
-    update: Update, context: ContextTypes.DEFAULT_TYPE
+        update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> int:
     data = await get_data_from_update(update)
     command = inspect.currentframe().f_code.co_name
@@ -342,10 +262,11 @@ async def remove_product(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     query = update.callback_query
     await query.answer()
 
-    product_id = query.data.split("|")[
-        0
-    ]  # "id={product_id}|{REMOVE}" -> "id={product_id}"
-    product_id = int(product_id[3:])  # "id={product_id}" -> "{product_id}"
+    # "id={product_id}|{REMOVE}" -> "id={product_id}"
+    product_id = query.data.split("|")[0]
+
+    # "id={product_id}" -> "{product_id}"
+    product_id = int(product_id[3:])
 
     await untrack_product(username=data["username"], product_id=product_id)
 
@@ -374,7 +295,7 @@ async def upload_db(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def ask_about_download(
-    update: Update, context: ContextTypes.DEFAULT_TYPE
+        update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> int | None:
     """Ask about DB loading"""
 

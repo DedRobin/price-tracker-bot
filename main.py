@@ -5,13 +5,13 @@ from telegram.ext import ApplicationBuilder, ContextTypes
 
 from source.bot.custom_entities import CustomContext
 from source.bot.handlers import (
-    add_user_handler,
     download_db_handler,
     help_handler,
     main_conversation_handler,
     upload_db_handler,
 )
 from source.bot.jobs import send_notifications
+from source.bot.users.handlers import add_user_handler
 from source.settings import HOST, PORT, SEND_DELAY, TOKEN, WEBHOOK_URL, get_logger
 from source.webserver.tools import create_app
 

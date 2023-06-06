@@ -20,6 +20,8 @@ ADD_USER, DOWNLOAD_DB = range(5, 7)
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """The starting point for entering the menu"""
+
     data = await get_data_from_update(update)
     command = inspect.currentframe().f_code.co_name
     logger.info(
@@ -43,6 +45,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     users = await select_users(username=data["username"])
     if users:
         user = users[0]
+
+        # Additional option for the admin
         if user.is_admin:
             keyboard.append(
                 [
@@ -54,6 +58,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
             )
         reply_markup = InlineKeyboardMarkup(keyboard)
         text = "Действия:"
+
         go_back = context.user_data.get("back")
         if go_back:
             extra_text = context.user_data.get("text")
@@ -129,6 +134,7 @@ async def download_db(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int
 
 
 async def back(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Return to the startpoint"""
     data = await get_data_from_update(update)
     command = inspect.currentframe().f_code.co_name
     logger.info(
@@ -148,6 +154,8 @@ async def back(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
 
 
 async def cancel_add_user(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Cancel adding yourself as an administrator"""
+
     data = await get_data_from_update(update)
     command = inspect.currentframe().f_code.co_name
     logger.info(

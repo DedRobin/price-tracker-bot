@@ -9,7 +9,7 @@ from source.bot.states import STATES
 from source.bot.users.queries import (
     add_joined_user,
     delete_user,
-    get_joined_users,
+    select_joined_users,
     user_exists,
 )
 from source.bot.users.services import delete_joined_user, post_admin, post_joined_user
@@ -142,7 +142,10 @@ async def show_asks(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
     query = update.callback_query
     await query.answer()
-    joined_users = await get_joined_users()
+
+    async_session = await create_session()
+    async with async_session() as session:
+        joined_users = await select_joined_users(session=session)
     context.user_data["joined_users"] = {
         f"ask_id={callback_index}": joined_user
         for callback_index, joined_user in enumerate(joined_users)

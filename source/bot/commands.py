@@ -7,8 +7,9 @@ from source.bot.services import get_data_from_update
 from source.bot.settings import TIMEOUT_CONV
 from source.bot.states import STATES
 from source.bot.users.queries import select_users
-from source.bot.users.services import get_chat_ids
+from source.bot.users.services import get_chat_ids, get_joined_users
 from source.settings import get_logger
+from source.database.engine import create_session
 
 logger = get_logger(__name__)
 
@@ -42,16 +43,25 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
         ]
     ]
 
+    # Count rows for JoinedUsers
+    async_session = await create_session()
+    async with async_session() as session:
+        joined_users = await get_joined_users(session=session)
+        len_joined_users = len(joined_users)
+
     users = await select_users(username=data["username"])
     if users:
         user = users[0]
 
         # Additional option for the admin
         if user.is_admin:
+            text_for_button = "Уведомления"
+            if len_joined_users:
+                text_for_button += " ({0})".format(len_joined_users)
             keyboard.append(
                 [
                     InlineKeyboardButton(
-                        text="Уведомления",
+                        text=text_for_button,
                         callback_data=str(STATES["ASKS"]),
                     )
                 ]
@@ -94,7 +104,7 @@ async def upload_db(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def ask_about_download(
-    update: Update, context: ContextTypes.DEFAULT_TYPE
+        update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> int | None:
     """Ask about DB loading"""
 

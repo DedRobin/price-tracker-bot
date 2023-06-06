@@ -1,12 +1,13 @@
 import os
-
+from typing import Any, Sequence
+from sqlalchemy import Row, RowMapping
 from sqlalchemy.ext.asyncio.session import AsyncSession
 
 from source.bot.users.queries import (
     insert_joined_user,
     insert_user,
     remove_joined_user,
-    select_users,
+    select_users, select_joined_users,
 )
 from source.database.models import JoinedUser
 from source.settings import get_logger
@@ -27,7 +28,7 @@ async def get_chat_ids(is_admin: bool = False) -> list:
 
 
 async def post_admin(
-    session: AsyncSession, username: str, chat_id: int, admin_key: str = None
+        session: AsyncSession, username: str, chat_id: int, admin_key: str = None
 ) -> bool:
     """Add the admin"""
 
@@ -39,10 +40,17 @@ async def post_admin(
     return False
 
 
+async def get_joined_users(session: AsyncSession) -> Sequence[Row | RowMapping | Any]:
+    """Select the joined user"""
+
+    result = await select_joined_users(session=session)
+    return result
+
+
 async def post_joined_user(
-    session: AsyncSession, username: str, chat_id: int
+        session: AsyncSession, username: str, chat_id: int
 ) -> Exception | None:
-    """Add the user"""
+    """Add the joined user"""
 
     error = await insert_joined_user(
         session=session, username=username, chat_id=chat_id, is_admin=False
@@ -51,7 +59,7 @@ async def post_joined_user(
 
 
 async def delete_joined_user(
-    session: AsyncSession, joined_user: JoinedUser
+        session: AsyncSession, joined_user: JoinedUser
 ) -> Exception | None:
     """Delete the joined user"""
 

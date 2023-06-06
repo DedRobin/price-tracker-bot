@@ -12,9 +12,8 @@ from source.bot.handlers import (
     upload_db_handler,
 )
 from source.bot.jobs import send_notifications
-from source.settings import get_logger
+from source.settings import HOST, PORT, SEND_DELAY, TOKEN, WEBHOOK_URL, get_logger
 from source.webserver.tools import create_app
-from source.settings import TOKEN, SEND_DELAY, WEBHOOK_URL, PORT, HOST
 
 
 async def main():

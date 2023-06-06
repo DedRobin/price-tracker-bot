@@ -3,10 +3,9 @@ from typing import Any, Sequence
 
 from sqlalchemy import Row, RowMapping, delete, exists, select
 from sqlalchemy.orm import selectinload
-from sqlalchemy.ext.asyncio.session import AsyncSession
 
 from source.database.engine import create_session
-from source.database.models import Product, SessionToken, User, JoinedUser
+from source.database.models import Product, User
 from source.settings import get_logger
 
 logger = get_logger(__name__)
@@ -37,36 +36,6 @@ async def insert_product(username: str, link: str, name: str, price: float) -> N
         )
         product.users.append(user)
         session.add(product)
-        await session.commit()
-
-
-async def add_user_for_product(username: str, link: str) -> None:
-    """Add user for product tracking"""
-
-    async_session = await create_session()
-    async with async_session() as session:
-        user = await session.scalar(select(User).where(User.username == username))
-        product = await session.scalar(
-            select(Product)
-            .where(Product.product_link == link)
-            .options(selectinload(Product.users))
-        )
-        product.users.append(user)
-        await session.commit()
-
-
-async def remove_user_from_special_product(username: str, product_id: int) -> None:
-    """Delete a special user from product tracking"""
-
-    async_session = await create_session()
-    async with async_session() as session:
-        user = await session.scalar(select(User).where(User.username == username))
-        product = await session.scalar(
-            select(Product)
-            .where(Product.id == product_id)
-            .options(selectinload(Product.users))
-        )
-        product.users.remove(user)
         await session.commit()
 
 
@@ -115,7 +84,7 @@ async def get_product(product_id: int):
 
 
 async def update_product(
-        product: Product, price: float = None, name: str = None
+    product: Product, price: float = None, name: str = None
 ) -> Product:
     """Update a specific product"""
 
@@ -144,64 +113,3 @@ async def remove_product(product_id: int) -> None:
         delete_query = delete(Product).where(Product.id == product_id)
         await session.execute(delete_query)
         await session.commit()
-
-
-async def update_users_for_special_product(username: str, product_id: int) -> None:
-    """Delete a special user from product tracking"""
-
-    async_session = await create_session()
-    async with async_session() as session:
-        user = await session.scalar(select(User).where(User.username == username))
-        product = await session.scalar(
-            select(Product)
-            .where(Product.id == product_id)
-            .options(selectinload(Product.users))
-        )
-        product.users.remove(user)
-        await session.commit()
-
-
-async def insert_token(token: str, username: str) -> None:
-    """Add the token for user"""
-
-    async_session = await create_session()
-    async with async_session() as session:
-        user = await select_users(username=username, is_admin=True, lazy_load=False)
-        user = user[0]
-        new_token = SessionToken(token=token, user_id=user.id)
-        session.add(new_token)
-        await session.commit()
-
-
-async def remove_token(token: str) -> None:
-    """Add the token for user"""
-
-    async_session = await create_session()
-    async with async_session() as session:
-        query = delete(SessionToken).where(SessionToken.token == token)
-        await session.execute(query)
-        await session.commit()
-
-
-async def exist_token(token: str) -> bool:
-    async_session = await create_session()
-    async with async_session() as session:
-        query = select(SessionToken).where(SessionToken.token == token)
-        it_exists = await session.scalar(exists(query).select())
-        return it_exists
-
-
-async def add_joined_user(session: AsyncSession, data: dict) -> bool:
-    join_user = JoinedUser(username=data["username"], chat_id=data["chat_id"])
-    session.add(join_user)
-    await session.commit()
-    return True
-
-
-async def get_joined_users() -> Sequence[Row | RowMapping | Any]:
-    async_session = await create_session()
-    async with async_session() as session:
-        query = select(JoinedUser)
-        result = await session.scalars(query)
-        result = result.all()
-        return result

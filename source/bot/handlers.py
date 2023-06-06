@@ -16,20 +16,29 @@ from source.bot.commands import (
     cancel_add_user,
     download_db,
     get_help,
+    start,
+    stop,
+    upload_db,
+)
+from source.bot.products.commands import (
     get_product_actions,
     remove_product,
     show_products,
-    start,
-    stop,
     track_menu,
     track_product,
-    upload_db
 )
-from source.bot.users.commands import show_asks, ask_to_join, apply_ask, refuse_ask, add_user, check_admin_key, \
-    delete_myself
 from source.bot.settings import TIMEOUT_CONV
 from source.bot.states import STATES
-from source.bot.users.commands import get_joined_user_actions
+from source.bot.users.commands import (
+    add_user,
+    apply_ask,
+    ask_to_join,
+    check_admin_key,
+    delete_myself,
+    get_joined_user_actions,
+    refuse_ask,
+    show_asks,
+)
 
 filterwarnings(
     action="ignore", message=r".*CallbackQueryHandler", category=PTBUserWarning
@@ -110,14 +119,10 @@ edit_product_handler = ConversationHandler(
 
 notifications_handler = ConversationHandler(
     conversation_timeout=TIMEOUT_CONV,
-    entry_points=[
-        CallbackQueryHandler(
-            show_asks, pattern=rf"^{STATES['ASKS']}$"
-        )
-    ],
+    entry_points=[CallbackQueryHandler(show_asks, pattern=rf"^{STATES['ASKS']}$")],
     states={
         STATES["ASK_ACTIONS"]: [
-            CallbackQueryHandler(get_joined_user_actions, pattern=rf"^ask_id=\d+$"),
+            CallbackQueryHandler(get_joined_user_actions, pattern=r"^ask_id=\d+$"),
             CallbackQueryHandler(apply_ask, pattern=rf"{STATES['APPLY_ASK']}$"),
             CallbackQueryHandler(refuse_ask, pattern=rf"{STATES['REFUSE_ASK']}$"),
         ],

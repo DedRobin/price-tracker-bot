@@ -1,7 +1,7 @@
 from aiohttp import ClientSession
 from telegram.ext import ContextTypes
 
-from source.database.queries import select_products, update_product
+from source.bot.products.queries import select_products, update_product
 from source.parsers import onliner
 from source.settings import get_logger
 
@@ -25,7 +25,9 @@ async def send_notifications(context: ContextTypes.DEFAULT_TYPE):
             else:
                 _, new_price = data
                 if new_price != product.current_price:
-                    updated_product = await update_product(product=product, price=new_price)
+                    updated_product = await update_product(
+                        product=product, price=new_price
+                    )
                     chat_ids = [user.chat_id for user in updated_product.users]
 
                     # Product data

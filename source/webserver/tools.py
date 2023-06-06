@@ -4,9 +4,9 @@ from fastapi.responses import Response
 from telegram import Update
 from telegram.ext import Application
 
-from source.settings import get_logger
 from source.database.admin_auth import get_admin_panel
 from source.database.engine import get_engine
+from source.settings import get_logger
 from source.webserver.settings import Settings
 
 

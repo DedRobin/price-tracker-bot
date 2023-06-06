@@ -1,15 +1,20 @@
 import inspect
+
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import ContextTypes, ConversationHandler
 
-from source.bot.services import get_data_from_update
-from source.bot.users.queries import user_exists, delete_user
-from source.bot.users.services import post_joined_user, post_admin, delete_joined_user
 from source.bot.commands import start
+from source.bot.services import get_data_from_update
 from source.bot.states import STATES
-from source.database.queries import get_joined_users, add_joined_user
-from source.settings import get_logger
+from source.bot.users.queries import (
+    add_joined_user,
+    delete_user,
+    get_joined_users,
+    user_exists,
+)
+from source.bot.users.services import delete_joined_user, post_admin, post_joined_user
 from source.database.engine import create_session
+from source.settings import get_logger
 
 logger = get_logger(__name__)
 
@@ -92,7 +97,10 @@ async def check_admin_key(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     async_session = await create_session()
     async with async_session() as session:
         user_created = await post_admin(
-            session=session, admin_key=admin_key, username=data["username"], chat_id=data["chat_id"]
+            session=session,
+            admin_key=admin_key,
+            username=data["username"],
+            chat_id=data["chat_id"],
         )
     if user_created:
         text = "Пользователь добавлен"
@@ -111,16 +119,15 @@ async def ask_to_join(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
             *data.values(), command
         )
     )
-    user_data = {
-        "username": data["username"],
-        "chat_id": data["chat_id"]
-    }
+    user_data = {"username": data["username"], "chat_id": data["chat_id"]}
 
     async_session = await create_session()
     async with async_session() as session:
         user_added = await add_joined_user(session=session, data=user_data)
     if user_added:
-        await update.message.reply_text("Отправлено уведомление администратору, ожидайте")
+        await update.message.reply_text(
+            "Отправлено уведомление администратору, ожидайте"
+        )
     else:
         await update.message.reply_text("Не удалось отправить уведомление")
 
@@ -141,11 +148,7 @@ async def show_asks(update: Update, context: ContextTypes.DEFAULT_TYPE):
         for callback_index, joined_user in enumerate(joined_users)
     }
     keyboard = [
-        [
-            InlineKeyboardButton(
-                text=joined_user.username, callback_data=callback_index
-            )
-        ]
+        [InlineKeyboardButton(text=joined_user.username, callback_data=callback_index)]
         for callback_index, joined_user in context.user_data["joined_users"].items()
     ]
     keyboard.append(
@@ -211,7 +214,9 @@ async def apply_ask(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = context.user_data["joined_user"].chat_id
     async_session = await create_session()
     async with async_session() as session:
-        error = await post_joined_user(session=session, username=username, chat_id=chat_id)
+        error = await post_joined_user(
+            session=session, username=username, chat_id=chat_id
+        )
 
     # Set extra text for next starting menu
     apply_emoji = "\U0001F44D"

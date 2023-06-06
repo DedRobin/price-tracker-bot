@@ -8,14 +8,14 @@ from sqladmin import Admin
 from sqladmin.authentication import AuthenticationBackend
 from sqlalchemy.ext.asyncio.engine import AsyncEngine
 
-from source.database.admin import ProductAdmin, SessionTokenAdmin, UserAdmin
-from source.bot.users.queries import select_users
-from source.settings import ADMIN_PASSWORD
 from source.bot.session_tokens.services import (
     add_token_for_user,
     check_token_in_db,
     remove_token_for_user,
 )
+from source.bot.users.queries import select_users
+from source.database.admin import ProductAdmin, SessionTokenAdmin, UserAdmin
+from source.settings import ADMIN_PASSWORD
 
 
 class AdminAuth(AuthenticationBackend):

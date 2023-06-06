@@ -4,3 +4,4 @@ venv
 __pycache__
 database.db
 test_bot
+logs.log

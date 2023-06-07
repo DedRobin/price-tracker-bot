@@ -17,7 +17,7 @@ from source.bot.products.commands import (
     track_menu,
     track_product,
 )
-from source.bot.settings import TIMEOUT_CONV
+from source.bot.settings import TIMEOUT_CONVERSATION
 from source.bot.states import STATES
 
 filterwarnings(
@@ -25,7 +25,7 @@ filterwarnings(
 )
 
 track_product_handler = ConversationHandler(
-    conversation_timeout=TIMEOUT_CONV,
+    conversation_timeout=TIMEOUT_CONVERSATION,
     entry_points=[
         CallbackQueryHandler(track_menu, pattern=rf"^{STATES['TRACK_PRODUCT_CONV']}$")
     ],
@@ -41,7 +41,7 @@ track_product_handler = ConversationHandler(
 )
 
 edit_product_handler = ConversationHandler(
-    conversation_timeout=TIMEOUT_CONV,
+    conversation_timeout=TIMEOUT_CONVERSATION,
     entry_points=[
         CallbackQueryHandler(
             show_products, pattern=rf"^{STATES['EDIT_TRACK_PRODUCTS_CONV']}$"

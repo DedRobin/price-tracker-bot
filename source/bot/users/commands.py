@@ -1,145 +1,37 @@
-import inspect
-
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import ContextTypes, ConversationHandler
 
+from source.bot.decorators import to_log
 from source.bot.commands import start
-from source.bot.services import get_data_from_update
 from source.bot.states import STATES
-from source.bot.users.queries import (
-    add_joined_user,
-    delete_user,
-    select_joined_users,
-    user_exists,
-)
-from source.bot.users.services import delete_joined_user, post_admin, post_joined_user
+from source.bot.users.queries import add_joined_user, select_joined_users
+from source.bot.users.services import delete_joined_user, post_joined_user
 from source.database.engine import create_session
 from source.settings import get_logger
 
 logger = get_logger(__name__)
 
 
-async def add_user(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    data = await get_data_from_update(update)
-    command = inspect.currentframe().f_code.co_name
-    logger.info(
-        "{0} {1} - {2} ({3}), chat ID={4} used command '/{5}'".format(
-            *data.values(), command
-        )
-    )
-
-    user_in_db = await user_exists(username=data["username"])
-    if user_in_db:
-        text = "Вы уже добавлены как пользователь. Хотите удалить себя?"
-        keyboard = [
-            [
-                InlineKeyboardButton(
-                    text="Да", callback_data=str(STATES["DELETE_MYSELF"])
-                ),
-                InlineKeyboardButton(
-                    text="Нет", callback_data=str(STATES["CANCEL_ADD_USER"])
-                ),
-            ]
-        ]
-    else:
-        text = "Введите секретный ключ"
-        keyboard = [
-            [
-                InlineKeyboardButton(
-                    text="Отмена", callback_data=str(STATES["CANCEL_ADD_USER"])
-                )
-            ]
-        ]
-
-    reply_markup = InlineKeyboardMarkup(keyboard)
-    message = await context.bot.send_message(
-        chat_id=data["chat_id"],
-        text=text,
-        reply_markup=reply_markup,
-    )
-
-    context.user_data["message_id"] = message.id
-
-    return STATES["ADD_USER"]
-
-
-async def delete_myself(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    data = await get_data_from_update(update)
-    command = inspect.currentframe().f_code.co_name
-    logger.info(
-        "{0} {1} - {2} ({3}), chat ID={4} used command '/{5}'".format(
-            *data.values(), command
-        )
-    )
-
-    await delete_user(username=data["username"])
-
-    await context.bot.edit_message_text(
-        chat_id=data["chat_id"],
-        message_id=context.user_data["message_id"],
-        text="Вы были удалены",
-    )
-
-    return ConversationHandler.END
-
-
-async def check_admin_key(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    admin_key = update.message.text
-    await update.message.delete()
-
-    data = await get_data_from_update(update)
-    command = inspect.currentframe().f_code.co_name
-    logger.info(
-        "{0} {1} - {2} ({3}), chat ID={4} used command '/{5}'".format(
-            *data.values(), command
-        )
-    )
-    async_session = await create_session()
-    async with async_session() as session:
-        user_created = await post_admin(
-            session=session,
-            admin_key=admin_key,
-            username=data["username"],
-            chat_id=data["chat_id"],
-        )
-    if user_created:
-        text = "Пользователь добавлен"
-    else:
-        text = "Не удалось добавить пользователя"
-
-    await context.bot.send_message(chat_id=data["chat_id"], text=text)
-    return ConversationHandler.END
-
-
-async def ask_to_join(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    data = await get_data_from_update(update)
-    command = inspect.currentframe().f_code.co_name
-    logger.info(
-        "{0} {1} - {2} ({3}), chat ID={4} used command '/{5}'".format(
-            *data.values(), command
-        )
-    )
-    user_data = {"username": data["username"], "chat_id": data["chat_id"]}
+@to_log(logger)
+async def ask_about_joining(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    user_data = {
+        "username": update.effective_chat.username,
+        "chat_id": update.effective_chat.id
+    }
 
     async_session = await create_session()
     async with async_session() as session:
         user_added = await add_joined_user(session=session, data=user_data)
     if user_added:
         await update.message.reply_text(
-            "Отправлено уведомление администратору, ожидайте"
+            "Уведомление отправлено администратору"
         )
     else:
         await update.message.reply_text("Не удалось отправить уведомление")
 
 
+@to_log(logger)
 async def show_asks(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    data = await get_data_from_update(update)
-    command = inspect.currentframe().f_code.co_name
-    logger.info(
-        "{0} {1} - {2} ({3}), chat ID={4} used command '/{5}'".format(
-            *data.values(), command
-        )
-    )
     query = update.callback_query
     await query.answer()
 
@@ -163,14 +55,8 @@ async def show_asks(update: Update, context: ContextTypes.DEFAULT_TYPE):
     return STATES["ASK_ACTIONS"]
 
 
+@to_log(logger)
 async def get_joined_user_actions(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    data = await get_data_from_update(update)
-    command = inspect.currentframe().f_code.co_name
-    logger.info(
-        "{0} {1} - {2} ({3}), chat ID={4} used command '/{5}'".format(
-            *data.values(), command
-        )
-    )
     query = update.callback_query
     await query.answer()
     callback_data = query.data
@@ -203,14 +89,8 @@ async def get_joined_user_actions(update: Update, context: ContextTypes.DEFAULT_
     return STATES["ASK_ACTIONS"]
 
 
+@to_log(logger)
 async def apply_ask(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    data = await get_data_from_update(update)
-    command = inspect.currentframe().f_code.co_name
-    logger.info(
-        "{0} {1} - {2} ({3}), chat ID={4} used command '/{5}'".format(
-            *data.values(), command
-        )
-    )
     query = update.callback_query
     await query.answer()
     username = context.user_data["joined_user"].username
@@ -243,14 +123,8 @@ async def apply_ask(update: Update, context: ContextTypes.DEFAULT_TYPE):
     return ConversationHandler.END
 
 
+@to_log(logger)
 async def refuse_ask(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    data = await get_data_from_update(update)
-    command = inspect.currentframe().f_code.co_name
-    logger.info(
-        "{0} {1} - {2} ({3}), chat ID={4} used command '/{5}'".format(
-            *data.values(), command
-        )
-    )
     query = update.callback_query
     await query.answer()
     joined_user = context.user_data["joined_user"]

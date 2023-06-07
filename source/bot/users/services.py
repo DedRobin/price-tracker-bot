@@ -1,11 +1,9 @@
-import os
 from typing import Any, Sequence
 from sqlalchemy import Row, RowMapping
 from sqlalchemy.ext.asyncio.session import AsyncSession
 
 from source.bot.users.queries import (
     insert_joined_user,
-    insert_user,
     remove_joined_user,
     select_users, select_joined_users,
 )
@@ -25,19 +23,6 @@ async def get_chat_ids(is_admin: bool = False) -> list:
     logger.info("Get chat IDs")
     chat_ids = [user.chat_id for user in users]
     return chat_ids
-
-
-async def post_admin(
-        session: AsyncSession, username: str, chat_id: int, admin_key: str = None
-) -> bool:
-    """Add the admin"""
-
-    if admin_key == os.environ.get("ADMIN_KEY"):
-        await insert_user(
-            session=session, username=username, chat_id=chat_id, is_admin=True
-        )
-        return True
-    return False
 
 
 async def get_joined_users(session: AsyncSession) -> Sequence[Row | RowMapping | Any]:

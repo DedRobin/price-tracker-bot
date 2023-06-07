@@ -38,16 +38,6 @@ async def select_users(
         return users
 
 
-async def insert_user(
-        session: AsyncSession, username: str, chat_id: int, is_admin: bool = False
-) -> None:
-    """Add a new user"""
-
-    user = User(username=username, chat_id=chat_id, is_admin=is_admin)
-    session.add(user)
-    await session.commit()
-
-
 async def user_exists(username: str) -> bool:
     """Check user in DB"""
 

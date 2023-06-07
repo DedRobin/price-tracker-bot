@@ -1,2 +1,2 @@
 # Timeout for each conversation
-TIMEOUT_CONV = 30
+TIMEOUT_CONVERSATION = 30  # seconds

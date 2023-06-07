@@ -1,9 +1,8 @@
-import inspect
-
 from aiohttp import ClientSession
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import ContextTypes, ConversationHandler
 
+from source.bot.decorators import to_log
 from source.bot.commands import start
 from source.bot.products.services import (
     add_product,
@@ -13,7 +12,6 @@ from source.bot.products.services import (
     get_user_products,
     untrack_product,
 )
-from source.bot.services import get_data_from_update
 from source.bot.states import STATES
 from source.parsers import onliner
 from source.settings import get_logger
@@ -21,14 +19,8 @@ from source.settings import get_logger
 logger = get_logger(__name__)
 
 
+@to_log(logger)
 async def track_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    data = await get_data_from_update(update)
-    command = inspect.currentframe().f_code.co_name
-    logger.info(
-        "{0} {1} - {2} ({3}), chat ID={4} used command '/{5}'".format(
-            *data.values(), command
-        )
-    )
     emoji = "\U0001F7E1"
     text = f"{emoji} Вставьте URL-адрес товара для отслеживания"
     keyboard = [[InlineKeyboardButton(text="Назад", callback_data=str(STATES["BACK"]))]]
@@ -39,7 +31,7 @@ async def track_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
         await context.bot.edit_message_text(
             text=text,
             message_id=context.user_data["message_id"],
-            chat_id=data["chat_id"],
+            chat_id=update.effective_chat.id,
             reply_markup=reply_markup,
         )
     else:
@@ -49,19 +41,12 @@ async def track_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     return STATES["TRACK"]
 
 
+@to_log(logger)
 async def track_product(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    data = await get_data_from_update(update)
-    command = inspect.currentframe().f_code.co_name
-    logger.info(
-        "{0} {1} - {2} ({3}), chat ID={4} used command '/{5}'".format(
-            *data.values(), command
-        )
-    )
-
     message = update.message
     link = message.text
 
-    product_is_existed = await check_product_in_db(username=data["username"], link=link)
+    product_is_existed = await check_product_in_db(update.effective_chat.username, link=link)
     link_is_correct = await check_link(link=link)
     if product_is_existed or not link_is_correct:
         text = "Ошибка"
@@ -86,7 +71,10 @@ async def track_product(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
             logger.error(f"Something is wrong.\nThe product={link}")
         else:
             is_added = await add_product(
-                username=data["username"], link=link, name=name, price=price
+                username=update.effective_chat.username,
+                link=link,
+                name=name,
+                price=price
             )
             if is_added:
                 text = "\U0001F44D Товар был добавлен для отслеживается"
@@ -103,19 +91,12 @@ async def track_product(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
     return ConversationHandler.END
 
 
+@to_log(logger)
 async def show_products(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    data = await get_data_from_update(update)
-    command = inspect.currentframe().f_code.co_name
-    logger.info(
-        "{0} {1} - {2} ({3}), chat ID={4} used command '/{5}'".format(
-            *data.values(), command
-        )
-    )
-
     query = update.callback_query
     await query.answer()
 
-    products = await get_user_products(username=data["username"])
+    products = await get_user_products(username=update.effective_chat.username)
     context.user_data["products"] = {
         f"id={callback_index}": product
         for callback_index, product in enumerate(products)
@@ -142,17 +123,10 @@ async def show_products(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     return STATES["PRODUCT_LIST"]
 
 
+@to_log(logger)
 async def get_product_actions(
-    update: Update, context: ContextTypes.DEFAULT_TYPE
+        update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> int:
-    data = await get_data_from_update(update)
-    command = inspect.currentframe().f_code.co_name
-    logger.info(
-        "{0} {1} - {2} ({3}), chat ID={4} used command '/{5}'".format(
-            *data.values(), command
-        )
-    )
-
     query = update.callback_query
     callback_index = query.data
     product = context.user_data["products"][callback_index]
@@ -183,15 +157,8 @@ async def get_product_actions(
     return STATES["PRODUCT_LIST"]
 
 
+@to_log(logger)
 async def remove_product(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    data = await get_data_from_update(update)
-    command = inspect.currentframe().f_code.co_name
-    logger.info(
-        "{0} {1} - {2} ({3}), chat ID={4} used command '/{5}'".format(
-            *data.values(), command
-        )
-    )
-
     query = update.callback_query
     await query.answer()
 
@@ -201,7 +168,7 @@ async def remove_product(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     # "id={product_id}" -> "{product_id}"
     product_id = int(product_id[3:])
 
-    await untrack_product(username=data["username"], product_id=product_id)
+    await untrack_product(username=update.effective_chat.username, product_id=product_id)
 
     # If relationship does not exist it is deleted
     await check_relationship(product_id=product_id)

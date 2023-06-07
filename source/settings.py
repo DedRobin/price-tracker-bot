@@ -9,7 +9,7 @@ SEND_DELAY = int(os.environ.get("SEND_EVERY", 3600))
 ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD")
 
 
-def get_logger(name: str = "") -> logging.Logger:
+def get_logger(name: str = __name__) -> logging.Logger:
     file_log = logging.FileHandler('logs.log')
     console_out = logging.StreamHandler()
     logging.basicConfig(
@@ -17,5 +17,5 @@ def get_logger(name: str = "") -> logging.Logger:
         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
         level=logging.INFO,
     )
-    logger = logging.getLogger(name or __name__)
+    logger = logging.getLogger(name)
     return logger

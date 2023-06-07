@@ -1,10 +1,8 @@
-import inspect
-
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import ContextTypes, ConversationHandler
 
-from source.bot.services import get_data_from_update
-from source.bot.settings import TIMEOUT_CONV
+from source.bot.decorators import to_log
+from source.bot.settings import TIMEOUT_CONVERSATION
 from source.bot.states import STATES
 from source.bot.users.queries import select_users
 from source.bot.users.services import get_chat_ids, get_joined_users
@@ -13,23 +11,10 @@ from source.database.engine import create_session
 
 logger = get_logger(__name__)
 
-# Callback points
-TRACK_PRODUCT_CONV, EDIT_TRACK_PRODUCTS_CONV = range(2)
-TRACK_PRODUCT = 2
-PRODUCT_LIST, REMOVE_PRODUCT = range(3, 5)
-ADD_USER, DOWNLOAD_DB = range(5, 7)
 
-
+@to_log(logger)
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """The starting point for entering the menu"""
-
-    data = await get_data_from_update(update)
-    command = inspect.currentframe().f_code.co_name
-    logger.info(
-        "{0} {1} - {2} ({3}), chat ID={4} used command '/{5}'".format(
-            *data.values(), command
-        )
-    )
 
     keyboard = [
         [
@@ -49,7 +34,9 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
         joined_users = await get_joined_users(session=session)
         len_joined_users = len(joined_users)
 
-    users = await select_users(username=data["username"])
+    users = await select_users(
+        username=update.effective_user.username
+    )
     if users:
         user = users[0]
 
@@ -78,13 +65,13 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
             message = await context.bot.edit_message_text(
                 text=text,
                 message_id=context.user_data["message_id"],
-                chat_id=data["chat_id"],
+                chat_id=update.effective_message.chat_id,
                 reply_markup=reply_markup,
             )
             context.user_data.clear()
         else:
             message = await context.bot.send_message(
-                chat_id=data["chat_id"],
+                chat_id=update.effective_message.chat_id,
                 reply_markup=reply_markup,
                 text=text,
             )
@@ -93,47 +80,37 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     return STATES["MENU"]
 
 
+@to_log(logger)
 async def upload_db(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Upload database for administrators"""
+    """Upload database for the administrator"""
 
-    chat_ids = await get_chat_ids(is_admin=True)
-    for chat_id in chat_ids:
+    admin_chat_ids = await get_chat_ids(is_admin=True)
+    chat_id = update.message.chat_id
+    if chat_id in admin_chat_ids:
         await context.bot.send_document(
             chat_id=chat_id, document="database.db", protect_content=True
         )
 
 
+@to_log(logger)
 async def ask_about_download(
         update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> int | None:
     """Ask about DB loading"""
 
-    data = await get_data_from_update(update)
-    command = inspect.currentframe().f_code.co_name
-    logger.info(
-        "{0} {1} - {2} ({3}), chat ID={4} used command '/{5}'".format(
-            *data.values(), command
-        )
-    )
     chat_ids = await get_chat_ids(is_admin=True)
-    if data["chat_id"] in chat_ids:
+    if update.effective_chat.id in chat_ids:
         await context.bot.send_message(
-            chat_id=data["chat_id"], text="Загрузите файл формата 'db_name.db'"
+            chat_id=update.effective_chat.id,
+            text="Загрузите файл формата 'db_name.db'"
         )
 
         return STATES["DOWNLOAD_DB"]
 
 
+@to_log(logger)
 async def download_db(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Download database for administrators"""
-
-    data = await get_data_from_update(update)
-    command = inspect.currentframe().f_code.co_name
-    logger.info(
-        "{0} {1} - {2} ({3}), chat ID={4} used command '/{5}'".format(
-            *data.values(), command
-        )
-    )
 
     file = await update.effective_message.document.get_file()
     await file.download_to_drive("database.db")
@@ -143,15 +120,9 @@ async def download_db(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int
     return ConversationHandler.END
 
 
+@to_log(logger)
 async def back(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Return to the startpoint"""
-    data = await get_data_from_update(update)
-    command = inspect.currentframe().f_code.co_name
-    logger.info(
-        "{0} {1} - {2} ({3}), chat ID={4} used command '/{5}'".format(
-            *data.values(), command
-        )
-    )
 
     query = update.callback_query
     await query.answer()
@@ -163,16 +134,10 @@ async def back(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     return ConversationHandler.END
 
 
-async def cancel_add_user(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+@to_log(logger)
+async def no_create_admin(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Cancel adding yourself as an administrator"""
 
-    data = await get_data_from_update(update)
-    command = inspect.currentframe().f_code.co_name
-    logger.info(
-        "{0} {1} - {2} ({3}), chat ID={4} used command '/{5}'".format(
-            *data.values(), command
-        )
-    )
     query = update.callback_query
     await query.answer()
     await query.message.delete()
@@ -180,29 +145,19 @@ async def cancel_add_user(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     return ConversationHandler.END
 
 
+@to_log(logger)
 async def stop(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    data = await get_data_from_update(update)
-    command = inspect.currentframe().f_code.co_name
-    logger.info(
-        "{0} {1} - {2} ({3}), chat ID={4} used command '/{5}'".format(
-            *data.values(), command
-        )
-    )
     await update.message.reply_text("Конец диалога")
 
     context.user_data.clear()
     return ConversationHandler.END
 
 
+@to_log(logger)
 async def get_help(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    data = await get_data_from_update(update)
-    command = inspect.currentframe().f_code.co_name
-    logger.info(
-        "{0} {1} - {2} ({3}), chat ID={4} used command '/{5}'".format(
-            *data.values(), command
-        )
-    )
+    """Send the help text to the chat"""
+
     text = f"""Чтобы запустить бота введите команду /start.
-После этого ваш диалог с ботом будет активен {TIMEOUT_CONV} секунд.
+После этого ваш диалог с ботом будет активен {TIMEOUT_CONVERSATION} секунд.
 Если бот перестал реагировать на нажатие кнопок или не отвечает на сообщения,то снова введите команду /start"""
     await update.message.reply_text(text=text)

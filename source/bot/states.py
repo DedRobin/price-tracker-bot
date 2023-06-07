@@ -1,24 +1,29 @@
 list_of_states = [
+    # Startpoint
     "MENU",
+
     # Menu
     "TRACK_PRODUCT_CONV",
     "EDIT_TRACK_PRODUCTS_CONV",
     "ASKS",
-    # User actions
-    "DELETE_MYSELF",
+
     # Actions for products
     "TRACK",
     "PRODUCT_LIST",
+
     # Actions for notifications
     "ASK_ACTIONS",
     "APPLY_ASK",
     "REFUSE_ASK",
+
     # Commands
-    "ADD_USER",
-    "CANCEL_ADD_USER",
+    "CREATE_ADMIN",
+    "NO_CREATE_ADMIN",
     "DOWNLOAD_DB",
+
     # Actions for special product
     "REMOVE",
+
     # Common actions
     "BACK",
 ]

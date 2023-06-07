@@ -19,20 +19,20 @@ from source.bot.commands import (
     upload_db,
 )
 from source.bot.products.handlers import edit_product_handler, track_product_handler
-from source.bot.settings import TIMEOUT_CONV
+from source.bot.settings import TIMEOUT_CONVERSATION
 from source.bot.states import STATES
 from source.bot.users.handlers import asks_handler
 
 filterwarnings(
     action="ignore", message=r".*CallbackQueryHandler", category=PTBUserWarning
 )
-# Handlers
+
 help_handler = CommandHandler("help", get_help)
 
 upload_db_handler = CommandHandler("upload_db", upload_db)
 
 download_db_handler = ConversationHandler(
-    conversation_timeout=TIMEOUT_CONV,
+    conversation_timeout=TIMEOUT_CONVERSATION,
     entry_points=[CommandHandler("download_db", ask_about_download)],
     states={
         STATES["DOWNLOAD_DB"]: [
@@ -46,7 +46,7 @@ download_db_handler = ConversationHandler(
 )
 
 main_conversation_handler = ConversationHandler(
-    conversation_timeout=TIMEOUT_CONV,
+    conversation_timeout=TIMEOUT_CONVERSATION,
     entry_points=[
         CommandHandler("start", start),
     ],
@@ -61,3 +61,7 @@ main_conversation_handler = ConversationHandler(
         CommandHandler("stop", stop),
     ],
 )
+
+# admin_handler = CommandHandler("admin", admin)
+
+

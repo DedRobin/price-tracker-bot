@@ -4,19 +4,20 @@ from fastapi.responses import Response
 from telegram import Update
 from telegram.ext import Application
 
-from source.database.admin_auth import get_admin_panel
+from source.database.admin_auth import get_admin_dashboard
 from source.database.engine import get_engine
 from source.settings import get_logger
 from source.webserver.settings import Settings
 
+logger = get_logger(__name__)
+
 
 async def create_app(bot_app: Application) -> FastAPI:
-    logger = get_logger(__name__)
     settings = Settings()
     web_app = FastAPI(openapi_url=settings.openapi_url)
 
     engine = await get_engine()
-    get_admin_panel(web_app=web_app, engine=engine)
+    get_admin_dashboard(web_app=web_app, engine=engine)
 
     @web_app.get("/")
     async def index():

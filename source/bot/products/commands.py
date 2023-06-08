@@ -12,7 +12,7 @@ from source.bot.products.services import (
     get_user_products,
     untrack_product,
 )
-from source.bot.states import STATES
+from source.bot.callback_data import STATES
 from source.parsers import onliner
 from source.settings import get_logger
 

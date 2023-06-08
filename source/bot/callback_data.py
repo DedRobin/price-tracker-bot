@@ -16,7 +16,8 @@ list_of_states = [
     "APPLY_ASK",
     "REFUSE_ASK",
 
-    # Commands
+    # Admin commands
+    "ADMIN_MENU",
     "CREATE_ADMIN",
     "NO_CREATE_ADMIN",
     "DOWNLOAD_DB",
@@ -29,3 +30,4 @@ list_of_states = [
 ]
 
 STATES = {key: value for value, key in enumerate(list_of_states)}
+STOP = 100

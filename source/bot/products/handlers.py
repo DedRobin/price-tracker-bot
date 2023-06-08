@@ -18,7 +18,7 @@ from source.bot.products.commands import (
     track_product,
 )
 from source.bot.settings import TIMEOUT_CONVERSATION
-from source.bot.states import STATES
+from source.bot.callback_data import STATES
 
 filterwarnings(
     action="ignore", message=r".*CallbackQueryHandler", category=PTBUserWarning

@@ -14,7 +14,7 @@ from source.bot.session_tokens.services import (
     remove_token_for_user,
 )
 from source.bot.users.queries import select_users
-from source.database.admin import ProductAdmin, SessionTokenAdmin, UserAdmin
+from source.database.admin_dashboard import ProductAdmin, SessionTokenAdmin, UserAdmin
 from source.settings import ADMIN_PASSWORD
 
 
@@ -63,7 +63,7 @@ class AdminAuth(AuthenticationBackend):
             return RedirectResponse(request.url_for("admin:login"), status_code=302)
 
 
-def get_admin_panel(web_app: FastAPI, engine: AsyncEngine) -> None:
+def get_admin_dashboard(web_app: FastAPI, engine: AsyncEngine) -> None:
     authentication_backend = AdminAuth(secret_key="secret_key")
 
     admin = Admin(

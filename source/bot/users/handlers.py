@@ -1,7 +1,7 @@
 from telegram.ext import CallbackQueryHandler, CommandHandler, ConversationHandler
-from source.bot.handlers import back
+from source.bot.commands import back
 from source.bot.settings import TIMEOUT_CONVERSATION
-from source.bot.states import STATES
+from source.bot.callback_data import STATES
 from source.bot.users.commands import (
     apply_ask,
     ask_about_joining,

@@ -3,7 +3,7 @@ from telegram.ext import ContextTypes, ConversationHandler
 
 from source.bot.decorators import to_log
 from source.bot.commands import start
-from source.bot.states import STATES
+from source.bot.callback_data import STATES
 from source.bot.users.queries import add_joined_user, select_joined_users
 from source.bot.users.services import delete_joined_user, post_joined_user
 from source.database.engine import create_session

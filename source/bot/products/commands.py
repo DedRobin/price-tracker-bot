@@ -52,9 +52,9 @@ async def track_product(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
         text = "Ошибка"
         error_emoji = "\U00002757"
         if product_is_existed:
-            context.user_data["text"] = f"{error_emoji} Такая ссылка уже отслеживается"
+            context.user_data["text"] = f"{error_emoji} Такая ссылка уже отслеживается\n"
         elif not link_is_correct:
-            context.user_data["text"] = f"{error_emoji} Ваша ссылка некорректная"
+            context.user_data["text"] = f"{error_emoji} Ваша ссылка некорректная\n"
 
         context.user_data["call_again"] = True
 

@@ -1,4 +1,7 @@
+from warnings import filterwarnings
 from telegram.ext import CallbackQueryHandler, CommandHandler, ConversationHandler
+from telegram.warnings import PTBUserWarning
+
 from source.bot.commands import back
 from source.bot.settings import TIMEOUT_CONVERSATION
 from source.bot.callback_data import STATES
@@ -10,9 +13,15 @@ from source.bot.users.commands import (
     show_asks,
 )
 
+filterwarnings(
+    action="ignore", message=r".*CallbackQueryHandler", category=PTBUserWarning
+)
+
 asks_handler = ConversationHandler(
     conversation_timeout=TIMEOUT_CONVERSATION,
-    entry_points=[CallbackQueryHandler(show_asks, pattern=rf"^{STATES['ASKS']}$")],
+    entry_points=[
+        CallbackQueryHandler(show_asks, pattern=rf"^{STATES['ASKS']}$")
+    ],
     states={
         STATES["ASK_ACTIONS"]: [
             CallbackQueryHandler(get_joined_user_actions, pattern=r"^ask_id=\d+$"),

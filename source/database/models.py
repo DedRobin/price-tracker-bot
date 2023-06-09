@@ -74,8 +74,8 @@ class SessionToken(Base):
         return f"Token '{self.id}'"
 
 
-class JoinedUser(Base):
-    __tablename__ = "joined_users"
+class UnregisteredUser(Base):
+    __tablename__ = "unregistered_users"
 
     id: Mapped[int] = mapped_column(primary_key=True)
     username: Mapped[str] = mapped_column(unique=True, nullable=True)

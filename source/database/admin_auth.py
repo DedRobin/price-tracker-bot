@@ -15,12 +15,20 @@ from source.bot.session_tokens.services import (
 )
 from source.bot.users.queries import select_users
 from source.database.admin_dashboard import ProductAdmin, SessionTokenAdmin, UserAdmin
+from source.database.services import send_notification_to_admin
 from source.settings import ADMIN_PASSWORD
+from source.settings import get_logger
+
+logger = get_logger(__name__)
 
 
 class AdminAuth(AuthenticationBackend):
     async def login(self, request: Request) -> bool:
         """Login the user and validate it"""
+        ip_address = request.client.host
+        logger.warning(f"{ip_address} has try to login")
+
+        await send_notification_to_admin(ip_address)
 
         form = await request.form()
         username, password = form["username"], form["password"]

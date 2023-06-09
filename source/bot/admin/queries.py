@@ -2,7 +2,6 @@ from sqlalchemy.ext.asyncio.session import AsyncSession
 from sqlalchemy import select, exists
 from source.database.models import User
 from source.settings import get_logger
-from sqlalchemy.exc import IntegrityError
 logger = get_logger(__name__)
 
 

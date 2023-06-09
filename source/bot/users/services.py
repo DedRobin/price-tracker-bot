@@ -7,7 +7,7 @@ from source.bot.users.queries import (
     remove_joined_user,
     select_users, select_joined_users,
 )
-from source.database.models import JoinedUser
+from source.database.models import UnregisteredUser
 from source.settings import get_logger
 
 logger = get_logger(__name__)
@@ -44,7 +44,7 @@ async def post_joined_user(
 
 
 async def delete_joined_user(
-        session: AsyncSession, joined_user: JoinedUser
+        session: AsyncSession, joined_user: UnregisteredUser
 ) -> Exception | None:
     """Delete the joined user"""
 

@@ -1,3 +1,5 @@
+from warnings import filterwarnings
+from telegram.warnings import PTBUserWarning
 from telegram.ext import (
     CallbackQueryHandler,
     CommandHandler,
@@ -11,6 +13,11 @@ from source.bot.admin.commands import admin_back
 from source.bot.settings import TIMEOUT_CONVERSATION
 from source.bot.admin.commands import create_admin, check_admin_key
 from source.bot.commands import stop
+
+filterwarnings(
+    action="ignore", message=r".*CallbackQueryHandler", category=PTBUserWarning
+)
+
 
 create_admin_handler = ConversationHandler(
     entry_points=[

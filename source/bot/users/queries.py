@@ -18,7 +18,7 @@ async def delete_user(username: str) -> None:
 
 
 async def select_users(
-        username: str = "", is_admin: bool = False, lazy_load: bool = True
+        username: str = "", is_admin: bool | None = None, lazy_load: bool = True
 ) -> Sequence[Row | RowMapping | Any]:
     """Get all users"""
 
@@ -28,14 +28,13 @@ async def select_users(
 
         if username:
             query = query.where(User.username == username)
-        if is_admin:
+        if is_admin is not None:
             query = query.where(User.is_admin == is_admin)
         if not lazy_load:
             query = query.options(selectinload(User.products), selectinload(User.token))
 
         users = await session.scalars(query)
-        users = users.all()
-        return users
+        return users.all()
 
 
 async def user_exists(username: str) -> bool:

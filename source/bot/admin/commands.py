@@ -5,7 +5,8 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update, Message
 from telegram.ext import ContextTypes
 
 from source.bot.admin.callback_data import *
-from source.bot.admin.queries import insert_admin_or_update, admin_exists
+from source.bot.admin.queries import insert_admin_or_update, admin_exists, delete_user
+from source.bot.users.queries import select_users
 from source.database.engine import create_session
 from source.settings import get_logger
 
@@ -15,7 +16,7 @@ logger = get_logger(__name__)
 @to_log(logger)
 async def admin_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Run the admin menu"""
-
+    context.refresh_data()
     keyboard = []
 
     async_session = await create_session()
@@ -26,11 +27,14 @@ async def admin_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
     if result:  # If admin exists
         context.user_data["is_admin"] = True
-        keyboard.append(
+        keyboard.extend(
             [
-                InlineKeyboardButton(
+                [InlineKeyboardButton(
+                    text="\U0001F4D4 Пользователи", callback_data=str(USERS)
+                )],
+                [InlineKeyboardButton(
                     text="\U0001F4D4 База данных", callback_data=str(DATABASE)
-                )
+                )]
             ]
         )
     else:  # If admin does not exist
@@ -100,7 +104,7 @@ async def create_admin(update: Update, context: ContextTypes.DEFAULT_TYPE) -> in
     keyboard = [
         [
             InlineKeyboardButton(
-                text="Отмена", callback_data=str(GO_BACK)
+                text="Отмена", callback_data=str(BACK)
             )
         ]
     ]
@@ -159,6 +163,83 @@ async def admin_back(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
 
 
 @to_log(logger)
+async def user_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Displaying all users"""
+
+    await update.callback_query.answer()
+
+    users = await select_users(is_admin=False)
+    if users:
+        context.user_data["users"] = {
+            f"user_id={callback_index}": user
+            for callback_index, user in enumerate(users)
+        }
+        keyboard = [
+            [
+                InlineKeyboardButton(
+                    text=user.username, callback_data=str(callback_index)
+                )
+            ]
+            for callback_index, user in context.user_data["users"].items()
+        ]
+        keyboard.append(
+            [
+                InlineKeyboardButton(text="Назад", callback_data=str(BACK)),
+            ]
+        )
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        text = "Пользователи"
+    else:
+        text = "Вы еще не добавили пользователей"
+        reply_markup = None
+
+    previous_message = context.user_data["message"]
+    context.user_data["message"] = await previous_message.edit_text(
+        text=text,
+        reply_markup=reply_markup
+    )
+    return USER_ACTIONS
+
+
+@to_log(logger)
+async def user_actions(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Displaying actions applied to users"""
+
+    await update.callback_query.answer()
+    user_id = update.callback_query.data
+    user = context.user_data["users"][user_id]
+    context.user_data["user"] = user
+    keyboard = [
+        [
+            InlineKeyboardButton(text="Удалить", callback_data=str(REMOVE_USER))
+        ]
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    text = f"Действия над пользователем '{user.username}'"
+    await update.callback_query.edit_message_text(text=text, reply_markup=reply_markup)
+    return USER_ACTIONS
+
+
+@to_log(logger)
+async def remove_user(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Removing the specific user"""
+
+    await update.callback_query.answer()
+    context.user_data["message"] = update.callback_query.message
+    user = context.user_data["user"]
+    async_session = await create_session()
+    async with async_session() as session:
+        user_delete = await delete_user(session=session, user=user)
+    if user_delete:
+        extra_text = f"Пользователь {user.username} удален"
+    else:
+        extra_text = f"Не удалось удалить пользователя {user.username}"
+    context.user_data["extra_text"] = extra_text
+    await admin_menu(update, context)
+    return END
+
+
+@to_log(logger)
 async def database_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Display DB actions"""
 
@@ -174,9 +255,7 @@ async def database_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
             ),
         ],
         [
-            InlineKeyboardButton(
-                text="Назад", callback_data=str(GO_BACK)
-            ),
+            InlineKeyboardButton(text="Назад", callback_data=str(BACK)),
         ],
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
@@ -196,8 +275,14 @@ async def ask_about_download(
     """Ask about DB loading"""
 
     previous_message = context.user_data["message"]
+    keyboard = [
+        [
+            InlineKeyboardButton(text="Назад", callback_data=str(BACK)),
+        ],
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
     text = "Загрузите файл формата 'db_name.db'"
-    await previous_message.edit_text(text=text)
+    context.user_data["message"] = await previous_message.edit_text(text=text, reply_markup=reply_markup)
 
     return DOWNLOAD_DB_ACTIONS
 
@@ -213,7 +298,7 @@ async def download_db(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int
     context.user_data["extra_text"] = "\U0001F44D База данных загружена"
 
     await admin_menu(update, context)
-    return GO_BACK
+    return BACK
 
 
 @to_log(logger)
@@ -227,3 +312,13 @@ async def upload_db(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     context.user_data["db_was_uploaded"] = True
     await admin_back(update, context)
     return END
+
+
+async def clear_data(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Clearing all user data before shutting down the function"""
+    previous_message: Message = context.user_data["message"]
+    await context.bot.send_message(
+        chat_id=previous_message.chat_id,
+        text="Время ожидания истекло"
+    )
+    context.user_data.clear()

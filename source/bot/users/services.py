@@ -13,18 +13,6 @@ from source.settings import get_logger
 logger = get_logger(__name__)
 
 
-async def get_chat_ids(is_admin: bool = False) -> list:
-    """Get all chat IDs"""
-
-    users = await select_users(
-        is_admin=is_admin,
-    )
-
-    logger.info("Get chat IDs")
-    chat_ids = [user.chat_id for user in users]
-    return chat_ids
-
-
 async def get_joined_users(session: AsyncSession) -> Sequence[Row | RowMapping | Any]:
     """Select the joined user"""
 

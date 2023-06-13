@@ -1,7 +1,8 @@
 from sqlalchemy.ext.asyncio.session import AsyncSession
-from sqlalchemy import select, exists
+from sqlalchemy import select, exists, delete
 from source.database.models import User
 from source.settings import get_logger
+
 logger = get_logger(__name__)
 
 
@@ -31,3 +32,14 @@ async def admin_exists(session: AsyncSession, username: str) -> None:
     query = exists(User).where(User.username == username, User.is_admin == True).select()
     result = await session.scalar(query)
     return result
+
+
+async def delete_user(session: AsyncSession, user: User) -> bool:
+    """Delete the user"""
+    try:
+        await session.delete(user)
+        await session.commit()
+    except Exception as ex:
+        logger.error(ex)
+        return False
+    return True

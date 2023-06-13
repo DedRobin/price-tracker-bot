@@ -33,7 +33,7 @@ class AdminAuth(AuthenticationBackend):
         form = await request.form()
         username, password = form["username"], form["password"]
 
-        admin_users = await select_users(username=username, is_admin=True)
+        admin_users = await select_users(is_admin=True)
 
         if admin_users:
             user = admin_users[0]

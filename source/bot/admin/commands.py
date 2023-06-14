@@ -16,7 +16,7 @@ logger = get_logger(__name__)
 @to_log(logger)
 async def admin_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Run the admin menu"""
-    context.refresh_data()
+
     keyboard = []
 
     async_session = await create_session()
@@ -187,12 +187,15 @@ async def user_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
                 InlineKeyboardButton(text="Назад", callback_data=str(BACK)),
             ]
         )
-        reply_markup = InlineKeyboardMarkup(keyboard)
+
         text = "Пользователи"
     else:
         text = "Вы еще не добавили пользователей"
-        reply_markup = None
+        keyboard = [[
+            InlineKeyboardButton(text="Назад", callback_data=str(BACK)),
+        ]]
 
+    reply_markup = InlineKeyboardMarkup(keyboard)
     previous_message = context.user_data["message"]
     context.user_data["message"] = await previous_message.edit_text(
         text=text,

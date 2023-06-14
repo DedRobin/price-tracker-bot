@@ -39,7 +39,7 @@ create_admin_handler = ConversationHandler(
 )
 
 users_handler = ConversationHandler(
-    conversation_timeout=TIMEOUT_CONVERSATION,
+    # conversation_timeout=TIMEOUT_CONVERSATION,
     entry_points=[
         CallbackQueryHandler(user_menu, pattern=rf"^{USERS}$"),
     ],
@@ -53,13 +53,13 @@ users_handler = ConversationHandler(
         CallbackQueryHandler(admin_back, pattern=rf"^{BACK}$"),
     ],
     map_to_parent={
-        BACK: ADMIN_ACTIONS,
+        # BACK: ADMIN_ACTIONS,
         TIMEOUT: TIMEOUT
     }
 )
 
 download_db_handler = ConversationHandler(
-    conversation_timeout=TIMEOUT_CONVERSATION,
+    # conversation_timeout=TIMEOUT_CONVERSATION,
     entry_points=[
         CallbackQueryHandler(ask_about_download, pattern=rf"^{DOWNLOAD_DB}$"),
     ],
@@ -79,7 +79,7 @@ download_db_handler = ConversationHandler(
 )
 
 database_handler = ConversationHandler(
-    conversation_timeout=TIMEOUT_CONVERSATION,
+    # conversation_timeout=TIMEOUT_CONVERSATION,
     entry_points=[
         CallbackQueryHandler(database_menu, pattern=rf"^{DATABASE}$")
     ],
@@ -99,7 +99,7 @@ database_handler = ConversationHandler(
 )
 
 admin_handler = ConversationHandler(
-    conversation_timeout=TIMEOUT_CONVERSATION,
+    # conversation_timeout=TIMEOUT_CONVERSATION,
     entry_points=[
         CommandHandler("admin", admin_menu)
     ],

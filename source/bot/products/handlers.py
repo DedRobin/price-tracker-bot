@@ -9,16 +9,20 @@ from telegram.ext import (
 )
 from telegram.warnings import PTBUserWarning
 
-from source.bot.commands import back, start
 from source.bot.products.commands import (
+    back,
+    start,
+    stop,
     get_product_actions,
     remove_product,
     show_products,
     track_menu,
     track_product,
 )
-from source.bot.settings import TIMEOUT_CONVERSATION
-from source.bot.callback_data import STATES
+from source.bot.users.handlers import asks_handler
+
+from source.bot.config.settings import TIMEOUT_CONVERSATION
+from source.bot.products.callback_data import STATES, STOP
 
 filterwarnings(
     action="ignore", message=r".*CallbackQueryHandler", category=PTBUserWarning
@@ -57,3 +61,23 @@ edit_product_handler = ConversationHandler(
     },
     fallbacks=[CallbackQueryHandler(back, pattern=rf"^{STATES['BACK']}$")],
 )
+
+main_conversation_handler = ConversationHandler(
+    conversation_timeout=TIMEOUT_CONVERSATION,
+    entry_points=[
+        CommandHandler("start", start),
+    ],
+    states={
+        STATES["MENU"]: [
+            track_product_handler,
+            edit_product_handler,
+            asks_handler,
+        ],
+    },
+    fallbacks=[
+        CommandHandler("stop", stop),
+        CallbackQueryHandler(stop, pattern=rf"^{STOP}$"),
+    ],
+)
+
+help_handler = CommandHandler("help", help)

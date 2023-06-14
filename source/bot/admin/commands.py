@@ -1,6 +1,6 @@
 import os
 
-from source.bot.decorators import to_log
+from source.bot.config.tools.decorators import log
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update, Message
 from telegram.ext import ContextTypes
 
@@ -13,7 +13,7 @@ from source.settings import get_logger
 logger = get_logger(__name__)
 
 
-@to_log(logger)
+@log(logger)
 async def admin_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Run the admin menu"""
 
@@ -30,7 +30,7 @@ async def admin_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
         keyboard.extend(
             [
                 [InlineKeyboardButton(
-                    text="\U0001F4D4 Пользователи", callback_data=str(USERS)
+                    text="\U0001F466\U0001F467 Пользователи", callback_data=str(USERS)
                 )],
                 [InlineKeyboardButton(
                     text="\U0001F4D4 База данных", callback_data=str(DATABASE)
@@ -90,7 +90,7 @@ async def admin_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     return ADMIN_ACTIONS
 
 
-@to_log(logger)
+@log(logger)
 async def create_admin(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     if context.user_data.get("is_admin"):
         text = "Вы уже добавлены как администратор"
@@ -122,7 +122,7 @@ async def create_admin(update: Update, context: ContextTypes.DEFAULT_TYPE) -> in
     return CHECK_ADMIN_KEY
 
 
-@to_log(logger)
+@log(logger)
 async def check_admin_key(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Checking the administrator key received from a text message"""
 
@@ -152,17 +152,16 @@ async def check_admin_key(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     return END
 
 
-@to_log(logger)
+@log(logger)
 async def admin_back(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Cancel adding yourself as an administrator"""
 
     await update.callback_query.answer()
-
     await admin_menu(update, context)
-    return END
+    return BACK
 
 
-@to_log(logger)
+@log(logger)
 async def user_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Displaying all users"""
 
@@ -188,7 +187,7 @@ async def user_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
             ]
         )
 
-        text = "Пользователи"
+        text = "\U0001F466\U0001F467 Пользователи"
     else:
         text = "Вы еще не добавили пользователей"
         keyboard = [[
@@ -204,7 +203,7 @@ async def user_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     return USER_ACTIONS
 
 
-@to_log(logger)
+@log(logger)
 async def user_actions(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Displaying actions applied to users"""
 
@@ -215,6 +214,9 @@ async def user_actions(update: Update, context: ContextTypes.DEFAULT_TYPE) -> in
     keyboard = [
         [
             InlineKeyboardButton(text="Удалить", callback_data=str(REMOVE_USER))
+        ],
+        [
+            InlineKeyboardButton(text="Назад", callback_data=str(BACK)),
         ]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
@@ -223,7 +225,7 @@ async def user_actions(update: Update, context: ContextTypes.DEFAULT_TYPE) -> in
     return USER_ACTIONS
 
 
-@to_log(logger)
+@log(logger)
 async def remove_user(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Removing the specific user"""
 
@@ -242,7 +244,7 @@ async def remove_user(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int
     return END
 
 
-@to_log(logger)
+@log(logger)
 async def database_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Display DB actions"""
 
@@ -271,7 +273,7 @@ async def database_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
     return DB_ACTIONS
 
 
-@to_log(logger)
+@log(logger)
 async def ask_about_download(
         update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> int | None:
@@ -290,7 +292,7 @@ async def ask_about_download(
     return DOWNLOAD_DB_ACTIONS
 
 
-@to_log(logger)
+@log(logger)
 async def download_db(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Download the database for administrator"""
 
@@ -304,24 +306,46 @@ async def download_db(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int
     return BACK
 
 
-@to_log(logger)
+@log(logger)
 async def upload_db(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Upload database for the administrator"""
     message = context.user_data["message"]
     chat_id = message.chat_id
     await context.bot.send_document(
-        chat_id=chat_id, document="database.db", protect_content=True
+        chat_id=chat_id, document="database.db", protect_content=True,
     )
     context.user_data["db_was_uploaded"] = True
-    await admin_back(update, context)
+    await admin_menu(update, context)
     return END
 
 
+@log(logger)
 async def clear_data(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Clearing all user data before shutting down the function"""
+
     previous_message: Message = context.user_data["message"]
     await context.bot.send_message(
         chat_id=previous_message.chat_id,
         text="Время ожидания истекло"
     )
     context.user_data.clear()
+
+
+@log(logger)
+async def admin_stop(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Exit from the main conversation"""
+
+    text = "Вы вышли из меню"
+    await context.bot.send_message(
+        chat_id=update.effective_message.chat_id,
+        text=text,
+    )
+    context.user_data.clear()
+    return END
+
+
+@log(logger)
+async def exit_from_nested_conv(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Exit from the second level"""
+
+    return END

@@ -5,7 +5,7 @@ from telegram import Update
 from telegram.ext import ContextTypes
 
 
-def to_log(logger: Logger) -> Callable[[Any], Callable[[Update, Any], Any]]:
+def log(logger: Logger) -> Callable[[Any], Callable[[Update, Any], Any]]:
     """Decorator for logging the metadata of the bot command"""
 
     def decorator_wrapper(function) -> Callable[[Update, Any], Any]:

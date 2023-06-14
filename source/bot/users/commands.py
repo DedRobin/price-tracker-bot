@@ -1,9 +1,9 @@
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import ContextTypes, ConversationHandler
 
-from source.bot.decorators import to_log
-from source.bot.commands import start
-from source.bot.callback_data import STATES
+from source.bot.config.tools.decorators import log
+from source.bot.products.commands import start
+from source.bot.products.callback_data import STATES
 from source.bot.users.queries import add_joined_user, select_joined_users
 from source.bot.users.services import delete_joined_user, post_joined_user
 from source.database.engine import create_session
@@ -12,7 +12,7 @@ from source.settings import get_logger
 logger = get_logger(__name__)
 
 
-@to_log(logger)
+@log(logger)
 async def ask_about_joining(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user_data = {
         "username": update.effective_chat.username,
@@ -30,7 +30,7 @@ async def ask_about_joining(update: Update, context: ContextTypes.DEFAULT_TYPE) 
         await update.message.reply_text("Не удалось отправить уведомление")
 
 
-@to_log(logger)
+@log(logger)
 async def show_asks(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
@@ -55,7 +55,7 @@ async def show_asks(update: Update, context: ContextTypes.DEFAULT_TYPE):
     return STATES["ASK_ACTIONS"]
 
 
-@to_log(logger)
+@log(logger)
 async def get_joined_user_actions(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
@@ -89,7 +89,7 @@ async def get_joined_user_actions(update: Update, context: ContextTypes.DEFAULT_
     return STATES["ASK_ACTIONS"]
 
 
-@to_log(logger)
+@log(logger)
 async def apply_ask(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
@@ -123,7 +123,7 @@ async def apply_ask(update: Update, context: ContextTypes.DEFAULT_TYPE):
     return ConversationHandler.END
 
 
-@to_log(logger)
+@log(logger)
 async def refuse_ask(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()

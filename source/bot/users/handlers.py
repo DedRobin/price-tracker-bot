@@ -2,9 +2,9 @@ from warnings import filterwarnings
 from telegram.ext import CallbackQueryHandler, CommandHandler, ConversationHandler
 from telegram.warnings import PTBUserWarning
 
-from source.bot.commands import back
-from source.bot.settings import TIMEOUT_CONVERSATION
-from source.bot.callback_data import STATES
+from source.bot.products.commands import back
+from source.bot.config.settings import TIMEOUT_CONVERSATION
+from source.bot.products.callback_data import STATES
 from source.bot.users.commands import (
     apply_ask,
     ask_about_joining,

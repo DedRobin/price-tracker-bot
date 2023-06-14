@@ -290,7 +290,7 @@ async def remove_product(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
 
 
 @log(logger)
-async def help(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def get_help(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Send the help text to the chat"""
 
     text = f"""Чтобы запустить бота введите команду /start.

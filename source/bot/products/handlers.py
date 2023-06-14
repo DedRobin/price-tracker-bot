@@ -18,6 +18,7 @@ from source.bot.products.commands import (
     show_products,
     track_menu,
     track_product,
+    get_help
 )
 from source.bot.users.handlers import asks_handler
 
@@ -80,4 +81,4 @@ main_conversation_handler = ConversationHandler(
     ],
 )
 
-help_handler = CommandHandler("help", help)
+help_handler = CommandHandler("help", get_help)

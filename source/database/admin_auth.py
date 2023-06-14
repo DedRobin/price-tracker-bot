@@ -8,7 +8,7 @@ from sqladmin import Admin
 from sqladmin.authentication import AuthenticationBackend
 from sqlalchemy.ext.asyncio.engine import AsyncEngine
 
-from source.bot.session_tokens.services import (
+from source.database.session_tokens.services import (
     add_token_for_user,
     check_token_in_db,
     remove_token_for_user,

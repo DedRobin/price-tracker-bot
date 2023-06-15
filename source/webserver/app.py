@@ -16,8 +16,8 @@ async def create_app(bot_app: Application) -> FastAPI:
     settings = Settings()
     web_app = FastAPI(openapi_url=settings.openapi_url)
 
-    engine = await get_engine()
-    get_admin_dashboard(web_app=web_app, engine=engine)
+    # engine = await get_engine()
+    # get_admin_dashboard(web_app=web_app, engine=engine)
 
     @web_app.get("/")
     async def index():

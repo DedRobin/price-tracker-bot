@@ -10,10 +10,11 @@ ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD")
 
 
 def get_logger(name: str = "unknown") -> logging.Logger:
-    file_log = logging.FileHandler('logs.log')
+    # file_log = logging.FileHandler('logs.log')
     console_out = logging.StreamHandler()
     logging.basicConfig(
-        handlers=(file_log, console_out),
+        # handlers=(file_log, console_out),
+        handlers=(console_out,),
         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
         level=logging.INFO,
     )

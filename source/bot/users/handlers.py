@@ -1,17 +1,12 @@
 from warnings import filterwarnings
+
 from telegram.ext import CallbackQueryHandler, CommandHandler, ConversationHandler
 from telegram.warnings import PTBUserWarning
 
-from source.bot.products.commands import back, stop_nested
 from source.bot.config.settings import TIMEOUT_CONVERSATION
 from source.bot.products.callback_data import STATES, STOP
-from source.bot.users.commands import (
-    apply_ask,
-    ask_about_joining,
-    get_joined_user_actions,
-    refuse_ask,
-    show_asks,
-)
+from source.bot.products.commands import back, stop_nested
+from source.bot.users.commands import apply_ask, ask_about_joining, get_joined_user_actions, refuse_ask, show_asks
 
 filterwarnings(
     action="ignore", message=r".*CallbackQueryHandler", category=PTBUserWarning
@@ -19,9 +14,7 @@ filterwarnings(
 
 asks_handler = ConversationHandler(
     conversation_timeout=TIMEOUT_CONVERSATION,
-    entry_points=[
-        CallbackQueryHandler(show_asks, pattern=rf"^{STATES['ASKS']}$")
-    ],
+    entry_points=[CallbackQueryHandler(show_asks, pattern=rf"^{STATES['ASKS']}$")],
     states={
         STATES["ASK_ACTIONS"]: [
             CallbackQueryHandler(get_joined_user_actions, pattern=r"^ask_id=\d+$"),
@@ -33,9 +26,7 @@ asks_handler = ConversationHandler(
         CallbackQueryHandler(back, pattern=rf"^{STATES['BACK']}$"),
         CommandHandler("stop", stop_nested),
     ],
-    map_to_parent={
-        STOP: STOP
-    }
+    map_to_parent={STOP: STOP},
 )
 
 join_handler = CommandHandler("join", ask_about_joining)

@@ -1,12 +1,15 @@
+from sqlalchemy import delete, exists, select
 from sqlalchemy.ext.asyncio.session import AsyncSession
-from sqlalchemy import select, exists, delete
+
 from source.database.models import User
 from source.settings import get_logger
 
 logger = get_logger(__name__)
 
 
-async def insert_admin_or_update(session: AsyncSession, username: str, chat_id: int) -> bool:
+async def insert_admin_or_update(
+    session: AsyncSession, username: str, chat_id: int
+) -> bool:
     """Add a new admin or update it"""
 
     query = select(User).where(User.username == username)
@@ -29,7 +32,9 @@ async def insert_admin_or_update(session: AsyncSession, username: str, chat_id: 
 async def admin_exists(session: AsyncSession, username: str) -> None:
     """Check if current user is an admin"""
 
-    query = exists(User).where(User.username == username, User.is_admin == True).select()
+    query = (
+        exists(User).where(User.username == username, User.is_admin == True).select()
+    )
     result = await session.scalar(query)
     return result
 

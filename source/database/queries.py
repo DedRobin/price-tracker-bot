@@ -1,7 +1,8 @@
 from typing import Any, Sequence
 
+from sqlalchemy import Row, RowMapping, select
 from sqlalchemy.ext.asyncio.session import AsyncSession
-from sqlalchemy import select, Row, RowMapping
+
 from source.database.models import User
 
 

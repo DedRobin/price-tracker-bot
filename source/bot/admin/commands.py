@@ -1,11 +1,11 @@
 import os
 
-from source.bot.config.tools.decorators import log
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update, Message
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Message, Update
 from telegram.ext import ContextTypes
 
 from source.bot.admin.callback_data import *
-from source.bot.admin.queries import insert_admin_or_update, admin_exists, delete_user
+from source.bot.admin.queries import admin_exists, delete_user, insert_admin_or_update
+from source.bot.config.tools.decorators import log
 from source.bot.users.queries import select_users
 from source.database.engine import create_session
 from source.settings import get_logger
@@ -22,26 +22,31 @@ async def admin_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     async_session = await create_session()
     async with async_session() as session:
         result = await admin_exists(
-            session=session,
-            username=update.effective_user.username
+            session=session, username=update.effective_user.username
         )
     if result:  # If admin exists
         context.user_data["is_admin"] = True
         keyboard.extend(
             [
-                [InlineKeyboardButton(
-                    text="\U0001F466\U0001F467 Пользователи", callback_data=str(USERS)
-                )],
-                [InlineKeyboardButton(
-                    text="\U0001F4D4 База данных", callback_data=str(DATABASE)
-                )]
+                [
+                    InlineKeyboardButton(
+                        text="\U0001F466\U0001F467 Пользователи",
+                        callback_data=str(USERS),
+                    )
+                ],
+                [
+                    InlineKeyboardButton(
+                        text="\U0001F4D4 База данных", callback_data=str(DATABASE)
+                    )
+                ],
             ]
         )
     else:  # If admin does not exist
         keyboard.append(
             [
                 InlineKeyboardButton(
-                    text="\U0001F170 Создать администратора", callback_data=str(CREATE_ADMIN)
+                    text="\U0001F170 Создать администратора",
+                    callback_data=str(CREATE_ADMIN),
                 ),
             ],
         )
@@ -70,21 +75,17 @@ async def admin_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 message = await context.bot.send_message(
                     chat_id=update.effective_message.chat_id,
                     text=text,
-                    reply_markup=reply_markup
+                    reply_markup=reply_markup,
                 )
             else:
                 message = await previous_message.edit_text(
-                    text=text,
-                    reply_markup=reply_markup
+                    text=text, reply_markup=reply_markup
                 )
             context.user_data["message"] = message
             if extra_text:
                 del context.user_data["extra_text"]
     else:
-        message = await update.message.reply_text(
-            text=text,
-            reply_markup=reply_markup
-        )
+        message = await update.message.reply_text(text=text, reply_markup=reply_markup)
         context.user_data["message"] = message
 
     return ADMIN_ACTIONS
@@ -101,13 +102,7 @@ async def create_admin(update: Update, context: ContextTypes.DEFAULT_TYPE) -> in
         return END
 
     text = "Введите секретный ключ"
-    keyboard = [
-        [
-            InlineKeyboardButton(
-                text="Отмена", callback_data=str(BACK)
-            )
-        ]
-    ]
+    keyboard = [[InlineKeyboardButton(text="Отмена", callback_data=str(BACK))]]
 
     reply_markup = InlineKeyboardMarkup(keyboard)
 
@@ -190,15 +185,16 @@ async def user_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
         text = "\U0001F466\U0001F467 Пользователи"
     else:
         text = "Вы еще не добавили пользователей"
-        keyboard = [[
-            InlineKeyboardButton(text="Назад", callback_data=str(BACK)),
-        ]]
+        keyboard = [
+            [
+                InlineKeyboardButton(text="Назад", callback_data=str(BACK)),
+            ]
+        ]
 
     reply_markup = InlineKeyboardMarkup(keyboard)
     previous_message = context.user_data["message"]
     context.user_data["message"] = await previous_message.edit_text(
-        text=text,
-        reply_markup=reply_markup
+        text=text, reply_markup=reply_markup
     )
     return USER_ACTIONS
 
@@ -212,12 +208,10 @@ async def user_actions(update: Update, context: ContextTypes.DEFAULT_TYPE) -> in
     user = context.user_data["users"][user_id]
     context.user_data["user"] = user
     keyboard = [
-        [
-            InlineKeyboardButton(text="Удалить", callback_data=str(REMOVE_USER))
-        ],
+        [InlineKeyboardButton(text="Удалить", callback_data=str(REMOVE_USER))],
         [
             InlineKeyboardButton(text="Назад", callback_data=str(BACK)),
-        ]
+        ],
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     text = f"Действия над пользователем '{user.username}'"
@@ -267,8 +261,7 @@ async def database_menu(_, context: ContextTypes.DEFAULT_TYPE) -> int:
     text = "Действия с базой данных"
     previous_message = context.user_data["message"]
     context.user_data["message"] = await previous_message.edit_text(
-        text=text,
-        reply_markup=reply_markup
+        text=text, reply_markup=reply_markup
     )
     return DB_ACTIONS
 
@@ -285,7 +278,9 @@ async def ask_about_download(_, context: ContextTypes.DEFAULT_TYPE) -> int | Non
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     text = "Загрузите файл формата 'db_name.db'"
-    context.user_data["message"] = await previous_message.edit_text(text=text, reply_markup=reply_markup)
+    context.user_data["message"] = await previous_message.edit_text(
+        text=text, reply_markup=reply_markup
+    )
 
     return DOWNLOAD_DB_ACTIONS
 
@@ -310,7 +305,9 @@ async def upload_db(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     message = context.user_data["message"]
     chat_id = message.chat_id
     await context.bot.send_document(
-        chat_id=chat_id, document="database.db", protect_content=True,
+        chat_id=chat_id,
+        document="database.db",
+        protect_content=True,
     )
     context.user_data["db_was_uploaded"] = True
     await admin_menu(update, context)
@@ -331,7 +328,9 @@ async def admin_stop(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
 
 
 @log(logger)
-async def admin_stop_silently(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+async def admin_stop_silently(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> int:
     """Exit from the main conversation without notification"""
 
     # text = "Вы закончили диалог без уведовления /admin"
@@ -343,7 +342,9 @@ async def admin_stop_silently(update: Update, context: ContextTypes.DEFAULT_TYPE
     return END
 
 
-async def admin_stop_warning(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def admin_stop_warning(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
     """Send a message that the user needs to end the previous conversation first"""
 
     text = "У Вас есть активный диалог. Остановите его введя /stop"

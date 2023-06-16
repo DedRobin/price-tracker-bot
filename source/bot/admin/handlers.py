@@ -1,19 +1,28 @@
 from warnings import filterwarnings
-from telegram.warnings import PTBUserWarning
-from telegram.ext import (
-    CallbackQueryHandler,
-    CommandHandler,
-    MessageHandler,
-    filters, TypeHandler
-)
 
-from source.bot.admin.commands import admin_menu, database_menu, ask_about_download, download_db, upload_db, user_menu, \
-    user_actions, remove_user, stop_nested, admin_stop_silently, admin_stop_warning
+from telegram.ext import CallbackQueryHandler, CommandHandler, MessageHandler, TypeHandler, filters
+from telegram.warnings import PTBUserWarning
+
 from source.bot.admin.callback_data import *
-from source.bot.admin.commands import admin_back
+from source.bot.admin.commands import (
+    admin_back,
+    admin_menu,
+    admin_stop,
+    admin_stop_silently,
+    admin_stop_warning,
+    ask_about_download,
+    check_admin_key,
+    create_admin,
+    database_menu,
+    download_db,
+    end_current_conv,
+    remove_user,
+    stop_nested,
+    upload_db,
+    user_actions,
+    user_menu,
+)
 from source.bot.config.settings import TIMEOUT_CONVERSATION
-from source.bot.admin.commands import create_admin, check_admin_key
-from source.bot.admin.commands import admin_stop, end_current_conv
 
 filterwarnings(
     action="ignore", message=r".*CallbackQueryHandler", category=PTBUserWarning
@@ -21,22 +30,18 @@ filterwarnings(
 
 create_admin_handler = ConversationHandler(
     conversation_timeout=TIMEOUT_CONVERSATION,
-    entry_points=[
-        CallbackQueryHandler(create_admin, pattern=rf"^{CREATE_ADMIN}$")
-    ],
+    entry_points=[CallbackQueryHandler(create_admin, pattern=rf"^{CREATE_ADMIN}$")],
     states={
         CHECK_ADMIN_KEY: [
             MessageHandler(filters.TEXT, check_admin_key),
         ],
-        TIMEOUT: [TypeHandler(filters.Update, end_current_conv)]
+        TIMEOUT: [TypeHandler(filters.Update, end_current_conv)],
     },
     fallbacks=[
         CallbackQueryHandler(admin_back, pattern=rf"^{BACK}$"),
         CommandHandler("stop", stop_nested),
     ],
-    map_to_parent={
-        STOP: STOP
-    }
+    map_to_parent={STOP: STOP},
 )
 
 users_handler = ConversationHandler(
@@ -49,7 +54,7 @@ users_handler = ConversationHandler(
             CallbackQueryHandler(user_actions, pattern=r"^user_id=\d+$"),
             CallbackQueryHandler(remove_user, pattern=rf"^{REMOVE_USER}$"),
         ],
-        TIMEOUT: [TypeHandler(filters.Update, end_current_conv)]
+        TIMEOUT: [TypeHandler(filters.Update, end_current_conv)],
     },
     fallbacks=[
         CallbackQueryHandler(admin_back, pattern=rf"^{BACK}$"),
@@ -58,7 +63,7 @@ users_handler = ConversationHandler(
     map_to_parent={
         BACK: ADMIN_ACTIONS,
         STOP: STOP,
-    }
+    },
 )
 
 download_db_handler = ConversationHandler(
@@ -72,7 +77,7 @@ download_db_handler = ConversationHandler(
             CommandHandler("stop", stop_nested),
             TypeHandler(filters.Update, download_db),
         ],
-        TIMEOUT: [TypeHandler(filters.Update, end_current_conv)]
+        TIMEOUT: [TypeHandler(filters.Update, end_current_conv)],
     },
     fallbacks=[
         CallbackQueryHandler(admin_back, pattern=rf"^{BACK}$"),
@@ -80,20 +85,18 @@ download_db_handler = ConversationHandler(
     map_to_parent={
         BACK: BACK,
         STOP: STOP,
-    }
+    },
 )
 
 database_handler = ConversationHandler(
     conversation_timeout=TIMEOUT_CONVERSATION,
-    entry_points=[
-        CallbackQueryHandler(database_menu, pattern=rf"^{DATABASE}$")
-    ],
+    entry_points=[CallbackQueryHandler(database_menu, pattern=rf"^{DATABASE}$")],
     states={
         DB_ACTIONS: [
             download_db_handler,
             CallbackQueryHandler(upload_db, pattern=rf"^{UPLOAD_DB}$"),
         ],
-        TIMEOUT: [TypeHandler(filters.Update, end_current_conv)]
+        TIMEOUT: [TypeHandler(filters.Update, end_current_conv)],
     },
     fallbacks=[
         CallbackQueryHandler(admin_back, pattern=rf"^{BACK}$"),
@@ -103,14 +106,12 @@ database_handler = ConversationHandler(
         BACK: ADMIN_ACTIONS,
         END: ADMIN_ACTIONS,
         STOP: STOP,
-    }
+    },
 )
 
 admin_handler = ConversationHandler(
     conversation_timeout=TIMEOUT_CONVERSATION,
-    entry_points=[
-        CommandHandler("admin", admin_menu)
-    ],
+    entry_points=[CommandHandler("admin", admin_menu)],
     states={
         ADMIN_ACTIONS: [
             create_admin_handler,

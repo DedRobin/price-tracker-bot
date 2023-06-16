@@ -1,6 +1,7 @@
 import os
 
 from telegram import Bot
+
 from source.database.engine import create_session
 from source.database.queries import select_admins
 
@@ -16,7 +17,4 @@ async def send_notification_to_admin(ip_address) -> None:
         admins = await select_admins(session=session)
     if admins:
         for admin in admins:
-            await bot.send_message(
-                chat_id=admin.chat_id,
-                text=text
-            )
+            await bot.send_message(chat_id=admin.chat_id, text=text)

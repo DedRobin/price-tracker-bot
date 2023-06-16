@@ -2,11 +2,9 @@ from aiohttp import ClientSession
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import ContextTypes, ConversationHandler
 
-from source.bot.users.queries import select_users
-from source.bot.users.services import get_joined_users
-from source.database.engine import create_session
-from source.bot.config.tools.decorators import log
 from source.bot.config.settings import TIMEOUT_CONVERSATION
+from source.bot.config.tools.decorators import log
+from source.bot.products.callback_data import END, STATES, STOP
 from source.bot.products.services import (
     add_product,
     check_link,
@@ -15,7 +13,9 @@ from source.bot.products.services import (
     get_user_products,
     untrack_product,
 )
-from source.bot.products.callback_data import STATES, STOP, END
+from source.bot.users.queries import select_users
+from source.bot.users.services import get_joined_users
+from source.database.engine import create_session
 from source.parsers import onliner
 from source.settings import get_logger
 
@@ -49,9 +49,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
         joined_users = await get_joined_users(session=session)
         len_joined_users = len(joined_users)
 
-    users = await select_users(
-        username=update.effective_user.username
-    )
+    users = await select_users(username=update.effective_user.username)
     if users:
         user = users[0]
 
@@ -67,7 +65,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
                         text=text_for_button,
                         callback_data=str(STATES["ASKS"]),
                     )
-                ]
+                ],
             )
 
         reply_markup = InlineKeyboardMarkup(keyboard)
@@ -116,10 +114,7 @@ async def stop(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Exit from some menu"""
 
     text = "Вы закончили диалог. \nЧтобы начать новый диалог введите /start"
-    await context.bot.send_message(
-        chat_id=update.effective_message.chat_id,
-        text=text
-    )
+    await context.bot.send_message(chat_id=update.effective_message.chat_id, text=text)
 
     context.user_data.clear()
     return ConversationHandler.END
@@ -187,13 +182,17 @@ async def track_product(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
     message = update.message
     link = message.text
 
-    product_is_existed = await check_product_in_db(update.effective_chat.username, link=link)
+    product_is_existed = await check_product_in_db(
+        update.effective_chat.username, link=link
+    )
     link_is_correct = await check_link(link=link)
     if product_is_existed or not link_is_correct:
         text = "Ошибка"
         error_emoji = "\U00002757"
         if product_is_existed:
-            context.user_data["text"] = f"{error_emoji} Такая ссылка уже отслеживается\n"
+            context.user_data[
+                "text"
+            ] = f"{error_emoji} Такая ссылка уже отслеживается\n"
         elif not link_is_correct:
             context.user_data["text"] = f"{error_emoji} Ваша ссылка некорректная\n"
 
@@ -215,7 +214,7 @@ async def track_product(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
                 username=update.effective_chat.username,
                 link=link,
                 name=name,
-                price=price
+                price=price,
             )
             if is_added:
                 text = "\U0001F44D Товар был добавлен для отслеживается"
@@ -266,7 +265,7 @@ async def show_products(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
 
 @log(logger)
 async def get_product_actions(
-        update: Update, context: ContextTypes.DEFAULT_TYPE
+    update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> int:
     query = update.callback_query
     callback_index = query.data
@@ -309,7 +308,9 @@ async def remove_product(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     # "id={product_id}" -> "{product_id}"
     product_id = int(product_id[3:])
 
-    await untrack_product(username=update.effective_chat.username, product_id=product_id)
+    await untrack_product(
+        username=update.effective_chat.username, product_id=product_id
+    )
 
     # If relationship does not exist it is deleted
     await check_relationship(product_id=product_id)

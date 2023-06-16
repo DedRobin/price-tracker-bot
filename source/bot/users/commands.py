@@ -2,8 +2,8 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import ContextTypes, ConversationHandler
 
 from source.bot.config.tools.decorators import log
-from source.bot.products.commands import start
 from source.bot.products.callback_data import STATES
+from source.bot.products.commands import start
 from source.bot.users.queries import add_joined_user, select_joined_users
 from source.bot.users.services import delete_joined_user, post_joined_user
 from source.database.engine import create_session
@@ -16,16 +16,14 @@ logger = get_logger(__name__)
 async def ask_about_joining(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user_data = {
         "username": update.effective_chat.username,
-        "chat_id": update.effective_chat.id
+        "chat_id": update.effective_chat.id,
     }
 
     async_session = await create_session()
     async with async_session() as session:
         user_added = await add_joined_user(session=session, data=user_data)
     if user_added:
-        await update.message.reply_text(
-            "Уведомление отправлено администратору"
-        )
+        await update.message.reply_text("Уведомление отправлено администратору")
     else:
         await update.message.reply_text("Не удалось отправить уведомление")
 

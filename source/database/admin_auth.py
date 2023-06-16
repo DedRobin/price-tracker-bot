@@ -8,16 +8,11 @@ from sqladmin import Admin
 from sqladmin.authentication import AuthenticationBackend
 from sqlalchemy.ext.asyncio.engine import AsyncEngine
 
-from source.database.session_tokens.services import (
-    add_token_for_user,
-    check_token_in_db,
-    remove_token_for_user,
-)
 from source.bot.users.queries import select_users
 from source.database.admin_dashboard import ProductAdmin, SessionTokenAdmin, UserAdmin
 from source.database.services import send_notification_to_admin
-from source.settings import ADMIN_PASSWORD
-from source.settings import get_logger
+from source.database.session_tokens.services import add_token_for_user, check_token_in_db, remove_token_for_user
+from source.settings import ADMIN_PASSWORD, get_logger
 
 logger = get_logger(__name__)
 

@@ -1,5 +1,5 @@
 from logging import Logger
-from typing import Callable, Any
+from typing import Any, Callable
 
 from telegram import Update
 from telegram.ext import ContextTypes

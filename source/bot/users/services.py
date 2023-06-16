@@ -1,12 +1,9 @@
 from typing import Any, Sequence
+
 from sqlalchemy import Row, RowMapping
 from sqlalchemy.ext.asyncio.session import AsyncSession
 
-from source.bot.users.queries import (
-    insert_joined_user,
-    remove_joined_user,
-    select_users, select_joined_users,
-)
+from source.bot.users.queries import insert_joined_user, remove_joined_user, select_joined_users, select_users
 from source.database.models import UnregisteredUser
 from source.settings import get_logger
 
@@ -21,7 +18,7 @@ async def get_joined_users(session: AsyncSession) -> Sequence[Row | RowMapping |
 
 
 async def post_joined_user(
-        session: AsyncSession, username: str, chat_id: int
+    session: AsyncSession, username: str, chat_id: int
 ) -> Exception | None:
     """Add the joined user"""
 
@@ -32,7 +29,7 @@ async def post_joined_user(
 
 
 async def delete_joined_user(
-        session: AsyncSession, joined_user: UnregisteredUser
+    session: AsyncSession, joined_user: UnregisteredUser
 ) -> Exception | None:
     """Delete the joined user"""
 

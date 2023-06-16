@@ -1,10 +1,11 @@
 from typing import Any, Sequence
+
 from sqlalchemy import Row, RowMapping, delete, exists, select
 from sqlalchemy.ext.asyncio.session import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from source.database.engine import create_session
-from source.database.models import UnregisteredUser, Product, User
+from source.database.models import Product, UnregisteredUser, User
 
 
 async def delete_user(username: str) -> None:
@@ -18,7 +19,7 @@ async def delete_user(username: str) -> None:
 
 
 async def select_users(
-        username: str = "", is_admin: bool | None = None, lazy_load: bool = True
+    username: str = "", is_admin: bool | None = None, lazy_load: bool = True
 ) -> Sequence[Row | RowMapping | Any]:
     """Get all users"""
 
@@ -78,7 +79,7 @@ async def remove_user_from_special_product(username: str, product_id: int) -> No
 
 
 async def insert_joined_user(
-        session: AsyncSession, username: str, chat_id: int, is_admin: bool = False
+    session: AsyncSession, username: str, chat_id: int, is_admin: bool = False
 ) -> Exception | None:
     """Add a joined user as the user"""
 
@@ -92,7 +93,7 @@ async def insert_joined_user(
 
 
 async def remove_joined_user(
-        session: AsyncSession, joined_user: UnregisteredUser
+    session: AsyncSession, joined_user: UnregisteredUser
 ) -> Exception | None:
     """Add a specific joined user"""
 
@@ -110,7 +111,9 @@ async def add_joined_user(session: AsyncSession, data: dict) -> bool:
     return True
 
 
-async def select_joined_users(session: AsyncSession) -> Sequence[Row | RowMapping | Any]:
+async def select_joined_users(
+    session: AsyncSession,
+) -> Sequence[Row | RowMapping | Any]:
     query = select(UnregisteredUser)
     result = await session.scalars(query)
     result = result.all()

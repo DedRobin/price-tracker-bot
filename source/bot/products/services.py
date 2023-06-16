@@ -1,16 +1,8 @@
 import os
 import re
 
-from source.bot.products.queries import (
-    exist_product,
-    insert_product,
-    remove_product,
-    select_products,
-)
-from source.bot.users.queries import (
-    add_user_for_product,
-    remove_user_from_special_product,
-)
+from source.bot.products.queries import exist_product, insert_product, remove_product, select_products
+from source.bot.users.queries import add_user_for_product, remove_user_from_special_product
 from source.settings import get_logger
 
 SERVER_HOST = os.environ.get("SERVER_HOST", "localhost")

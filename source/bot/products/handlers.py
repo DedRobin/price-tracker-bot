@@ -1,31 +1,25 @@
 from warnings import filterwarnings
 
-from telegram.ext import (
-    CallbackQueryHandler,
-    CommandHandler,
-    ConversationHandler,
-    MessageHandler,
-    filters, TypeHandler,
-)
+from telegram.ext import CallbackQueryHandler, CommandHandler, ConversationHandler, MessageHandler, TypeHandler, filters
 from telegram.warnings import PTBUserWarning
 
+from source.bot.config.settings import TIMEOUT_CONVERSATION
+from source.bot.products.callback_data import STATES, STOP, TIMEOUT
 from source.bot.products.commands import (
     back,
+    get_help,
+    get_product_actions,
+    remove_product,
+    show_products,
     start,
     stop,
     stop_nested,
     stop_silently,
-    get_product_actions,
-    remove_product,
-    show_products,
+    stop_warning,
     track_menu,
     track_product,
-    get_help, stop_warning
 )
 from source.bot.users.handlers import asks_handler
-
-from source.bot.config.settings import TIMEOUT_CONVERSATION
-from source.bot.products.callback_data import STATES, STOP, TIMEOUT
 
 filterwarnings(
     action="ignore", message=r".*CallbackQueryHandler", category=PTBUserWarning
@@ -45,9 +39,7 @@ track_product_handler = ConversationHandler(
         CallbackQueryHandler(back, pattern=rf"^{STATES['BACK']}$"),
         CommandHandler("stop", stop_nested),
     ],
-    map_to_parent={
-        STOP: STOP
-    }
+    map_to_parent={STOP: STOP},
 )
 
 edit_product_handler = ConversationHandler(
@@ -60,16 +52,16 @@ edit_product_handler = ConversationHandler(
     states={
         STATES["PRODUCT_LIST"]: [
             CallbackQueryHandler(get_product_actions, pattern=r"^id=\d+$"),
-            CallbackQueryHandler(remove_product, pattern=rf"^id=\d+\|{STATES['REMOVE']}$"),
+            CallbackQueryHandler(
+                remove_product, pattern=rf"^id=\d+\|{STATES['REMOVE']}$"
+            ),
         ],
     },
     fallbacks=[
         CommandHandler("stop", stop_nested),
-        CallbackQueryHandler(back, pattern=rf"^{STATES['BACK']}$")
+        CallbackQueryHandler(back, pattern=rf"^{STATES['BACK']}$"),
     ],
-    map_to_parent={
-        STOP: STOP
-    }
+    map_to_parent={STOP: STOP},
 )
 
 main_conversation_handler = ConversationHandler(
@@ -84,7 +76,7 @@ main_conversation_handler = ConversationHandler(
             asks_handler,
         ],
         TIMEOUT: [TypeHandler(filters.Update, stop_silently)],
-        STOP: [CommandHandler("start", start)]
+        STOP: [CommandHandler("start", start)],
     },
     fallbacks=[
         CommandHandler("start", stop_warning),

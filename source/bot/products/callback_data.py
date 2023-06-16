@@ -1,3 +1,5 @@
+from telegram.ext import ConversationHandler
+
 list_of_states = [
     # Startpoint
     "MENU",
@@ -31,3 +33,5 @@ list_of_states = [
 
 STATES = {key: value for value, key in enumerate(list_of_states)}
 STOP = 100
+TIMEOUT = ConversationHandler.TIMEOUT
+END = ConversationHandler.END

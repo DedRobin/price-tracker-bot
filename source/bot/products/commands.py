@@ -15,7 +15,7 @@ from source.bot.products.services import (
     get_user_products,
     untrack_product,
 )
-from source.bot.products.callback_data import STATES, STOP
+from source.bot.products.callback_data import STATES, STOP, END
 from source.parsers import onliner
 from source.settings import get_logger
 
@@ -114,7 +114,8 @@ async def back(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
 @log(logger)
 async def stop(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Exit from some menu"""
-    text = "Вы вышли из меню"
+
+    text = "Вы закончили диалог. \nЧтобы начать новый диалог введите /start"
     await context.bot.send_message(
         chat_id=update.effective_message.chat_id,
         text=text
@@ -122,6 +123,31 @@ async def stop(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
 
     context.user_data.clear()
     return ConversationHandler.END
+
+
+@log(logger)
+async def stop_nested(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Exit the nested conversation"""
+
+    text = "Вы закончили диалог. \nЧтобы начать новый диалог введите /start"
+    await context.bot.send_message(
+        chat_id=update.effective_message.chat_id,
+        text=text,
+    )
+    context.user_data.clear()
+    return STOP
+
+
+async def stop_silently(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Exit from the main conversation without notification"""
+
+    # text = "Вы закончили диалог без уведовления /start"
+    # await context.bot.send_message(
+    #     chat_id=update.effective_message.chat_id,
+    #     text=text,
+    # )
+    context.user_data.clear()
+    return END
 
 
 @log(logger)

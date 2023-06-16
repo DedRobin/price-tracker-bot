@@ -2,9 +2,9 @@ from warnings import filterwarnings
 from telegram.ext import CallbackQueryHandler, CommandHandler, ConversationHandler
 from telegram.warnings import PTBUserWarning
 
-from source.bot.products.commands import back
+from source.bot.products.commands import back, stop_nested
 from source.bot.config.settings import TIMEOUT_CONVERSATION
-from source.bot.products.callback_data import STATES
+from source.bot.products.callback_data import STATES, STOP
 from source.bot.users.commands import (
     apply_ask,
     ask_about_joining,
@@ -29,7 +29,13 @@ asks_handler = ConversationHandler(
             CallbackQueryHandler(refuse_ask, pattern=rf"{STATES['REFUSE_ASK']}$"),
         ],
     },
-    fallbacks=[CallbackQueryHandler(back, pattern=rf"^{STATES['BACK']}$")],
+    fallbacks=[
+        CallbackQueryHandler(back, pattern=rf"^{STATES['BACK']}$"),
+        CommandHandler("stop", stop_nested),
+    ],
+    map_to_parent={
+        STOP: STOP
+    }
 )
 
 join_handler = CommandHandler("join", ask_about_joining)

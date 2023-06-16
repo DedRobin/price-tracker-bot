@@ -5,7 +5,7 @@ from telegram.ext import (
     CommandHandler,
     ConversationHandler,
     MessageHandler,
-    filters,
+    filters, TypeHandler,
 )
 from telegram.warnings import PTBUserWarning
 
@@ -13,6 +13,8 @@ from source.bot.products.commands import (
     back,
     start,
     stop,
+    stop_nested,
+    stop_silently,
     get_product_actions,
     remove_product,
     show_products,
@@ -23,7 +25,7 @@ from source.bot.products.commands import (
 from source.bot.users.handlers import asks_handler
 
 from source.bot.config.settings import TIMEOUT_CONVERSATION
-from source.bot.products.callback_data import STATES, STOP
+from source.bot.products.callback_data import STATES, STOP, TIMEOUT
 
 filterwarnings(
     action="ignore", message=r".*CallbackQueryHandler", category=PTBUserWarning
@@ -41,8 +43,11 @@ track_product_handler = ConversationHandler(
     },
     fallbacks=[
         CallbackQueryHandler(back, pattern=rf"^{STATES['BACK']}$"),
-        CommandHandler("start", start),
+        CommandHandler("stop", stop_nested),
     ],
+    map_to_parent={
+        STOP: STOP
+    }
 )
 
 edit_product_handler = ConversationHandler(
@@ -55,12 +60,16 @@ edit_product_handler = ConversationHandler(
     states={
         STATES["PRODUCT_LIST"]: [
             CallbackQueryHandler(get_product_actions, pattern=r"^id=\d+$"),
-            CallbackQueryHandler(
-                remove_product, pattern=rf"^id=\d+\|{STATES['REMOVE']}$"
-            ),
+            CallbackQueryHandler(remove_product, pattern=rf"^id=\d+\|{STATES['REMOVE']}$"),
         ],
     },
-    fallbacks=[CallbackQueryHandler(back, pattern=rf"^{STATES['BACK']}$")],
+    fallbacks=[
+        CommandHandler("stop", stop_nested),
+        CallbackQueryHandler(back, pattern=rf"^{STATES['BACK']}$")
+    ],
+    map_to_parent={
+        STOP: STOP
+    }
 )
 
 main_conversation_handler = ConversationHandler(
@@ -74,6 +83,8 @@ main_conversation_handler = ConversationHandler(
             edit_product_handler,
             asks_handler,
         ],
+        TIMEOUT: [TypeHandler(filters.Update, stop_silently)],
+        STOP: [CommandHandler("start", start)]
     },
     fallbacks=[
         CommandHandler("stop", stop),

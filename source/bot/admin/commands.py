@@ -332,14 +332,15 @@ async def admin_stop(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     return END
 
 
+@log(logger)
 async def admin_stop_silently(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Exit from the main conversation without notification"""
 
-    text = "Вы закончили диалог без уведовления /admin"
-    await context.bot.send_message(
-        chat_id=update.effective_message.chat_id,
-        text=text,
-    )
+    # text = "Вы закончили диалог без уведовления /admin"
+    # await context.bot.send_message(
+    #     chat_id=update.effective_message.chat_id,
+    #     text=text,
+    # )
     context.user_data.clear()
     return END
 

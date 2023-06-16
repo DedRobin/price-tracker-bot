@@ -8,7 +8,7 @@ from telegram.ext import (
 )
 
 from source.bot.admin.commands import admin_menu, database_menu, ask_about_download, download_db, upload_db, user_menu, \
-    user_actions, remove_user, stop_nested, admin_stop_silently
+    user_actions, remove_user, stop_nested, admin_stop_silently, admin_stop_warning
 from source.bot.admin.callback_data import *
 from source.bot.admin.commands import admin_back
 from source.bot.config.settings import TIMEOUT_CONVERSATION
@@ -121,6 +121,7 @@ admin_handler = ConversationHandler(
         STOP: [CommandHandler("admin", admin_menu)],
     },
     fallbacks=[
+        CommandHandler("admin", admin_stop_warning),
         CallbackQueryHandler(admin_stop, pattern=rf"^{STOP}$"),
         CommandHandler("stop", admin_stop),
     ],

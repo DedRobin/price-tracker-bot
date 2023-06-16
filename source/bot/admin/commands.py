@@ -245,7 +245,7 @@ async def remove_user(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int
 
 
 @log(logger)
-async def database_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+async def database_menu(_, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Display DB actions"""
 
     keyboard = [
@@ -274,9 +274,7 @@ async def database_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
 
 
 @log(logger)
-async def ask_about_download(
-        update: Update, context: ContextTypes.DEFAULT_TYPE
-) -> int | None:
+async def ask_about_download(_, context: ContextTypes.DEFAULT_TYPE) -> int | None:
     """Ask about DB loading"""
 
     previous_message = context.user_data["message"]
@@ -345,6 +343,16 @@ async def admin_stop_silently(update: Update, context: ContextTypes.DEFAULT_TYPE
     return END
 
 
+async def admin_stop_warning(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Send a message that the user needs to end the previous conversation first"""
+
+    text = "У Вас есть активный диалог. Остановите его введя /stop"
+    await context.bot.send_message(
+        chat_id=update.effective_message.chat_id,
+        text=text,
+    )
+
+
 @log(logger)
 async def stop_nested(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Exit the nested conversation"""
@@ -359,7 +367,7 @@ async def stop_nested(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int
 
 
 @log(logger)
-async def end_current_conv(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+async def end_current_conv(_, __) -> int:
     """Exit from the current level"""
 
     return END

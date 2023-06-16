@@ -20,7 +20,7 @@ from source.bot.products.commands import (
     show_products,
     track_menu,
     track_product,
-    get_help
+    get_help, stop_warning
 )
 from source.bot.users.handlers import asks_handler
 
@@ -87,6 +87,7 @@ main_conversation_handler = ConversationHandler(
         STOP: [CommandHandler("start", start)]
     },
     fallbacks=[
+        CommandHandler("start", stop_warning),
         CommandHandler("stop", stop),
         CallbackQueryHandler(stop, pattern=rf"^{STOP}$"),
     ],

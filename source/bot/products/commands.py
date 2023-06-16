@@ -150,6 +150,16 @@ async def stop_silently(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
     return END
 
 
+async def stop_warning(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Send a message that the user needs to end the previous conversation first"""
+
+    text = "У Вас есть активный диалог. Остановите его введя /stop"
+    await context.bot.send_message(
+        chat_id=update.effective_message.chat_id,
+        text=text,
+    )
+
+
 @log(logger)
 async def track_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     emoji = "\U0001F7E1"
@@ -316,7 +326,7 @@ async def remove_product(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
 
 
 @log(logger)
-async def get_help(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def get_help(update: Update, _) -> None:
     """Send the help text to the chat"""
 
     text = f"""Чтобы запустить бота введите команду /start.

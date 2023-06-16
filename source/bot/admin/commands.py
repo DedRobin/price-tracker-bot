@@ -65,7 +65,7 @@ async def admin_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if previous_message.text != text:
             if context.user_data.get("db_was_uploaded"):
                 # Replace DB's message and the previous message
-
+                del context.user_data["db_was_uploaded"]
                 await previous_message.delete()
                 message = await context.bot.send_message(
                     chat_id=update.effective_message.chat_id,
@@ -320,22 +320,22 @@ async def upload_db(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
 
 
 @log(logger)
-async def clear_data(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Clearing all user data before shutting down the function"""
-
-    previous_message: Message = context.user_data["message"]
-    await context.bot.send_message(
-        chat_id=previous_message.chat_id,
-        text="Время ожидания истекло"
-    )
-    context.user_data.clear()
-
-
-@log(logger)
 async def admin_stop(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Exit from the main conversation"""
 
-    text = "Вы вышли из меню"
+    text = "Вы закончили диалог. \nЧтобы начать новый диалог введите /admin"
+    await context.bot.send_message(
+        chat_id=update.effective_message.chat_id,
+        text=text,
+    )
+    context.user_data.clear()
+    return END
+
+
+async def admin_stop_silently(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Exit from the main conversation without notification"""
+
+    text = "Вы закончили диалог без уведовления /admin"
     await context.bot.send_message(
         chat_id=update.effective_message.chat_id,
         text=text,
@@ -345,7 +345,20 @@ async def admin_stop(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
 
 
 @log(logger)
-async def exit_from_nested_conv(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Exit from the second level"""
+async def stop_nested(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Exit the nested conversation"""
+
+    text = "Вы закончили диалог. \nЧтобы начать новый диалог введите /admin"
+    await context.bot.send_message(
+        chat_id=update.effective_message.chat_id,
+        text=text,
+    )
+    context.user_data.clear()
+    return STOP
+
+
+@log(logger)
+async def end_current_conv(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Exit from the current level"""
 
     return END

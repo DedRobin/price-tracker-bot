@@ -98,9 +98,8 @@ async def update_product(
         product = await session.scalar(select_query)
         if name:
             product.name = name
-        if price:
-            product.previous_price = product.current_price
-            product.current_price = price
+        product.previous_price = product.current_price
+        product.current_price = price
         await session.commit()
         return product
 
